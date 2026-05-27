@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ein Tag mit Lea und Paul</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+    <div id="loginBereich">
+        <h2>Gruppe anmelden</h2>
+        <input type="text" id="gruppenName" placeholder="Gruppenname"><br><br>
+        <input type="password" id="passwort" placeholder="Passwort"><br><br>
+        <button id="loginBtn">Starten</button>
+        <p id="errorMsg" style="color:red;"></p>
+    </div>
+
+    <div id="spielBereich" style="display:none;">
+        <h2 id="begruessung"></h2>
+        <div id="frageNr"></div>
+        <div id="frageContainer"></div> 
+    </div>
+
+    <div id="adminBereich" style="display:none;">
+        <h2>Fortschritt aller Gruppen</h2>
+        <button id="refreshAdminBtn">Aktualisieren</button>
+        <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Gruppe</th>
+                    <th style="padding: 8px;">Aktueller Fortschritt (Index)</th>
+                </tr>
+            </thead>
+            <tbody id="adminTabelleBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
