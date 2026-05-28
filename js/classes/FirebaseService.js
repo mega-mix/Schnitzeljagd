@@ -20,6 +20,12 @@ export class FirebaseService {
         this.auth = getAuth(this.app);
     }
 
+    onAuthChanged(callback) {
+        import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js").then(({ onAuthStateChanged }) => {
+            onAuthStateChanged(this.auth, callback);
+        });
+    }
+
     /**
      * Helfer-Methode, um aus einem Gruppennamen eine interne Fake-E-Mail zu bauen
      */
@@ -116,6 +122,17 @@ export class FirebaseService {
     async deleteDocument(collectionName, docId) {
         const docRef = doc(this.db, collectionName, docId);
         await deleteDoc(docRef);
+    }
+
+    /**
+     * Erstellt ein neues Dokument in einer Collection
+     * @param {string} collectionName - Name der Collection (z.B. "gruppen")
+     * @param {string} docId - ID des zu erstellenden Dokuments (z.B. Gruppenname)
+     * @param {string} daten - Daten für das neue Dokument
+     */
+    async createDocument(collectionName, docId, daten) {
+        const docRef = doc(this.db, collectionName, docId);
+        await setDoc(docRef, daten);
     }
 
     /**

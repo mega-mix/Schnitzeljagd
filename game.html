@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ein Tag mit Lea und Paul</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div id="adminNachrichtDisplay" style="display:none;">
+
+    </div>
+
+    <div id="spielBereich" style="display:none;">
+        <h2 id="begruessung"></h2>
+        <div id="frageNr"></div>
+        <div id="frageContainer"></div>
+    </div>
+
+    <div id="adminBereich" style="display:none;">
+        <h2>Fortschritt aller Gruppen</h2>
+        <button id="adminPauseBtn">Spiel pausieren</button>
+        <button id="adminFreigabeBtn" style="display:none;"">Spiel freigeben</button>
+        <button id="adminGrpBearbeitenBtn">Gruppe bearbeiten</button>
+        <button id="adminFragenBearbeitenBtn">Fragen bearbeiten</button>
+        <button id="adminNachrichtBtn">Admin Nachricht</button>
+        <button id="refreshAdminBtn">Aktualisieren</button>
+        <p id="adminMengeStationen">Es gibt ... Stationen.</p>
+        <p id="adminStatus">Spiel ...</p>
+        <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Gruppe</th>
+                    <th style="padding: 8px;">Fortschritt</th>
+                    <th style="padding: 8px;">Zeitstempel</th>
+                </tr>
+            </thead>
+            <tbody id="adminTabelleBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="bearbeitenBereich" style="display: none;">
+        <input type="text" id="bearbeitenGruppenName" placeholder="Gruppenname">
+        <input type="number" min="0" id="bearbeitenFortschritt" placeholder="Fragen Index..."><br><br>
+        <button id="bearbeitenSaveBtn">Speichern</button>
+        <button id="bearbeitenDeleteBtn">Daten Löschen</button>
+        <button id="bearbeitenAbortBtn">Abbrechen</button>
+        <p id="bearbeitenErrorMsg" style="color:red;"></p>
+    </div>
+
+    <div id="adminNachrichtBereich" style="display: none;">
+        <input type="text" id="adminNachricht" placeholder="Admin Nachricht..."><br><br>
+        <button id="nachrichtSaveBtn">Speichern</button>
+        <button id="nachrichtAbortBtn">Abbrechen</button>
+        <p id="bearbeitenErrorMsg" style="color:red;"></p>
+    </div>
+
+    <div id="adminFragenBereich" style="display: none;">
+        <input type="number" min="0" id="fragenNummerLaden" value="0">
+        <button id="fragenLadenBtn">Laden</button>
+        <textarea id="fragenFrage" rows="5" placeholder="Frage..."></textarea>
+        <textarea id="fragenAntwort" placeholder="Antwort..."></textarea>
+        <input type="number" min="0" id="fragenNummer" placeholder="Index..."><br><br>
+        <button id="fragenSaveBtn">Speichern</button>
+        <button id="fragenDeleteBtn">Löschen</button>
+        <button id="fragenAbortBtn">Abbrechen</button>
+        <p id="fragenErrorMsg" style="color:red;"></p>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
