@@ -4,6 +4,8 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
+document.getElementById("version").innerText = "v 1.1.2";
+
 let aktuelleGruppe = "";
 let aktuellerFortschritt = 0;
 let alleFragen = [];
@@ -14,9 +16,6 @@ let alleFragen = [];
 // ---------------------------------------------
 fb.onAuthChanged(async (user) => {
     if (user) {
-        // User ist eingeloggt! Jetzt Daten laden
-        console.log("Eingeloggt mit UID:", user.uid);
-        
         const daten = await fb.getDocument("gruppen", user.uid);
         if (daten) {
             aktuelleGruppe = daten.gruppenName;
@@ -26,13 +25,13 @@ fb.onAuthChanged(async (user) => {
             const freigegeben = await fb.istSpielFreigegeben();
 
             if (aktuelleGruppe === "admin") {
-                document.getElementById("adminBereich").style.display = "block";
+                document.getElementById("admin-bereich").style.display = "block";
                 ladeAlleGruppen();
                 return;
             }
 
-            document.getElementById("spielBereich").style.display = "block";
-            document.getElementById("begruessung").innerText = `Hallo ${aktuelleGruppe}`;
+            document.getElementById("spiel-bereich").style.display = "block";
+            document.getElementById("spiel-begruessung").innerText = `Hallo ${aktuelleGruppe}`;
 
 
             zeigeFrage();
@@ -48,32 +47,32 @@ fb.onAuthChanged(async (user) => {
 // --- ADMIN LOGIK ---
 // ---------------------------------------------
 async function ladeAlleGruppen() {
-    const tabelleBody = document.getElementById("adminTabelleBody");
+    const tabelleBody = document.getElementById("admin-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     await fragenLaden();
-    document.getElementById("adminMengeStationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
+    document.getElementById("admin-menge-stationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
 
     const adminNachricht = await fb.getAdminNachricht();
 
     if (adminNachricht !== "") {
-        document.getElementById("adminNachrichtDisplay").style.display = "block";
-        document.getElementById("adminNachrichtDisplay").innerText = adminNachricht;
+        document.getElementById("admin-nachricht-display").style.display = "block";
+        document.getElementById("admin-nachricht-display").innerText = adminNachricht;
     } else {
-        document.getElementById("adminNachrichtDisplay").style.display = "none";
+        document.getElementById("admin-nachricht-display").style.display = "none";
     }
 
     const freigegeben = await fb.istSpielFreigegeben();
 
     if (freigegeben) {
-        document.getElementById("adminPauseBtn").style.display = "block";
-        document.getElementById("adminFreigabeBtn").style.display = "none";
+        document.getElementById("admin-pause-btn").style.display = "block";
+        document.getElementById("admin-freigabe-btn").style.display = "none";
     } else {
-        document.getElementById("adminPauseBtn").style.display = "none";
-        document.getElementById("adminFreigabeBtn").style.display = "block";
+        document.getElementById("admin-pause-btn").style.display = "none";
+        document.getElementById("admin-freigabe-btn").style.display = "block";
     }
 
-    const status = document.getElementById("adminStatus");
+    const status = document.getElementById("admin-status");
 
     if (freigegeben) {
         status.innerText ="Spiel aktiv";
@@ -118,30 +117,30 @@ async function ladeAlleGruppen() {
     }
 }
 
-document.getElementById("refreshAdminBtn").addEventListener("click", ladeAlleGruppen);
+document.getElementById("admin-refresh-btn").addEventListener("click", ladeAlleGruppen);
 
-document.getElementById("adminGrpBearbeitenBtn").addEventListener("click", () => {
-    document.getElementById("adminBereich").style.display = "none";
-    document.getElementById("bearbeitenBereich").style.display = "block";
+document.getElementById("admin-bearbeiten-btn").addEventListener("click", () => {
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("admin-bearbeiten-bereich").style.display = "block";
 });
 
-document.getElementById("adminFragenBearbeitenBtn").addEventListener("click", () => {
-    document.getElementById("adminBereich").style.display = "none";
-    document.getElementById("adminFragenBereich").style.display = "block";
+document.getElementById("admin-fragen-btn").addEventListener("click", () => {
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("admin-fragen-bereich").style.display = "block";
 });
 
-document.getElementById("adminNachrichtBtn").addEventListener("click", async () => {
-    document.getElementById("adminNachricht").value = await fb.getAdminNachricht();
-    document.getElementById("adminBereich").style.display = "none";
-    document.getElementById("adminNachrichtBereich").style.display = "block";
+document.getElementById("admin-nachricht-btn").addEventListener("click", async () => {
+    document.getElementById("admin-nachricht").value = await fb.getAdminNachricht();
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("admin-nachricht-bereich").style.display = "block";
 });
 
-document.getElementById("adminPauseBtn").addEventListener("click", async () => {
+document.getElementById("admin-pause-btn").addEventListener("click", async () => {
     await fb.setzeSpielStatus(false);
     ladeAlleGruppen();
 });
 
-document.getElementById("adminFreigabeBtn").addEventListener("click", async () => {
+document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
     await fb.setzeSpielStatus(true);
     ladeAlleGruppen();
 });
@@ -150,14 +149,14 @@ document.getElementById("adminFreigabeBtn").addEventListener("click", async () =
 // ---------------------------------------------
 // --- GRUPPE BEARBEITEN ---
 // ---------------------------------------------
-document.getElementById("bearbeitenAbortBtn").addEventListener("click", () => {
-    document.getElementById("bearbeitenBereich").style.display = "none";
-    document.getElementById("adminBereich").style.display = "block";
+document.getElementById("bearbeiten-abort-btn").addEventListener("click", () => {
+    document.getElementById("admin-bearbeiten-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
 });
 
-document.getElementById("bearbeitenDeleteBtn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("bearbeitenGruppenName").value.trim();
-    const errorMsg = document.getElementById("bearbeitenErrorMsg");
+document.getElementById("bearbeiten-delete-btn").addEventListener("click", async () => {
+    const nameInput = document.getElementById("bearbeiten-name").value.trim();
+    const errorMsg = document.getElementById("bearbeiten-error-msg");
 
     try {
         // Alle Dokumente holen, um das mit dem richtigen Namen zu finden
@@ -178,14 +177,14 @@ document.getElementById("bearbeitenDeleteBtn").addEventListener("click", async (
     }
 
     errorMsg.innerText = "";
-    document.getElementById("bearbeitenBereich").style.display = "none";
-    document.getElementById("adminBereich").style.display = "block";
+    document.getElementById("admin-bearbeiten-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
 });
 
-document.getElementById("bearbeitenSaveBtn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("bearbeitenGruppenName").value.trim();
-    const stationInput = parseInt(document.getElementById("bearbeitenFortschritt").value);
-    const errorMsg = document.getElementById("bearbeitenErrorMsg");
+document.getElementById("bearbeiten-save-btn").addEventListener("click", async () => {
+    const nameInput = document.getElementById("bearbeiten-name").value.trim();
+    const stationInput = parseInt(document.getElementById("bearbeiten-fortschritt").value);
+    const errorMsg = document.getElementById("bearbeiten-error-msg");
 
     try {
         const alleGruppen = await fb.getAllDocuments("gruppen");
@@ -208,11 +207,11 @@ document.getElementById("bearbeitenSaveBtn").addEventListener("click", async () 
         errorMsg.innerText = "Fehler beim Speichern der Daten.";
     }
 
-    document.getElementById("bearbeitenGruppenName").value = "";
-    document.getElementById("bearbeitenFortschritt").value = "";
+    document.getElementById("bearbeiten-name").value = "";
+    document.getElementById("bearbeiten-fortschritt").value = "";
     errorMsg.innerText = "";
-    document.getElementById("bearbeitenBereich").style.display = "none";
-    document.getElementById("adminBereich").style.display = "block";
+    document.getElementById("admin-bearbeiten-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
     ladeAlleGruppen();
 });
 
@@ -220,14 +219,14 @@ document.getElementById("bearbeitenSaveBtn").addEventListener("click", async () 
 // ---------------------------------------------
 // --- ADMIN NACHRICHT BEREICH ---
 // ---------------------------------------------
-document.getElementById("nachrichtAbortBtn").addEventListener("click", () => {
-    document.getElementById("adminNachrichtBereich").style.display = "none";
-    document.getElementById("adminBereich").style.display = "block";
+document.getElementById("nachricht-abort-btn").addEventListener("click", () => {
+    document.getElementById("admin-nachricht-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
 });
 
-document.getElementById("nachrichtSaveBtn").addEventListener("click", async () => {
-    const nachrichtInput = document.getElementById("adminNachricht").value.trim();
-    const errorMsg = document.getElementById("bearbeitenErrorMsg");
+document.getElementById("nachricht-save-btn").addEventListener("click", async () => {
+    const nachrichtInput = document.getElementById("admin-nachricht").value.trim();
+    const errorMsg = document.getElementById("nachrichten-error-msg");
 
     try {
         fb.setzeAdminNachricht(nachrichtInput);
@@ -238,8 +237,8 @@ document.getElementById("nachrichtSaveBtn").addEventListener("click", async () =
     }
 
     errorMsg.innerText = "";
-    document.getElementById("adminNachrichtBereich").style.display = "none";
-    document.getElementById("adminBereich").style.display = "block";
+    document.getElementById("admin-nachricht-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
     ladeAlleGruppen();
 });
 
@@ -248,15 +247,15 @@ document.getElementById("nachrichtSaveBtn").addEventListener("click", async () =
 // --- SPIEL LOGIK ---
 // ---------------------------------------------
 async function zeigeFrage() {
-    const container = document.getElementById("frageContainer");
+    const container = document.getElementById("spiel-frage");
     const freigegeben = await fb.istSpielFreigegeben();
     const adminNachricht = await fb.getAdminNachricht();
 
     if (adminNachricht !== "") {
-        document.getElementById("adminNachrichtDisplay").style.display = "block";
-        document.getElementById("adminNachrichtDisplay").innerText = adminNachricht;
+        document.getElementById("admin-nachricht-display").style.display = "block";
+        document.getElementById("admin-nachricht-display").innerText = adminNachricht;
     } else {
-        document.getElementById("adminNachrichtDisplay").style.display = "none";
+        document.getElementById("admin-nachricht-display").style.display = "none";
     }
 
     await fragenLaden();
@@ -266,19 +265,19 @@ async function zeigeFrage() {
             <p>Station ${aktuellerFortschritt +1}</p>
             <h3>Das Spiel ist aktuell pausiert.</h3>
             <p>Bitte warte auf die Freigabe von Björn.</p>
-            <button id="statusBtn">Aktualisieren</button>
+            <button id="status-btn">Aktualisieren</button>
         `;
-        document.getElementById("statusBtn").addEventListener("click", zeigeFrage);
+        document.getElementById("status-btn").addEventListener("click", zeigeFrage);
     }
     else if (aktuellerFortschritt < alleFragen.length) {
         container.innerHTML = `
             <p>Station ${aktuellerFortschritt +1}</p>
             <p>${alleFragen[aktuellerFortschritt].frage}</p>
-            <textarea id="antwortInput" placeholder="Eure Antwort"></textarea>
-            <button id="antwortBtn">Antwort senden</button>
-            <p id="spielFeedback" style="color:red;"></p>
+            <textarea id="antwort-input" placeholder="Eure Antwort"></textarea>
+            <button id="antwort-btn">Antwort senden</button>
+            <p id="spiel-feedback" style="color:red;"></p>
         `;
-        document.getElementById("antwortBtn").addEventListener("click", pruefeAntwort);
+        document.getElementById("antwort-btn").addEventListener("click", pruefeAntwort);
     }
     else {
         container.innerHTML = `<h3>Glückwunsch! Ihr habt den Tag mit Lea und Paul erfolgreich gemeistert! 🎉</h3>`;
@@ -286,8 +285,8 @@ async function zeigeFrage() {
 }
 
 async function pruefeAntwort() {
-    const spielerAntwort = document.getElementById("antwortInput").value;
-    const feedback = document.getElementById("spielFeedback");
+    const spielerAntwort = document.getElementById("antwort-input").value;
+    const feedback = document.getElementById("spiel-feedback");
     let istRichtig = false;
 
     if (aktuellerFortschritt < alleFragen.length) {
@@ -322,7 +321,7 @@ async function fragenLaden() {
             return a.id.localeCompare(b.id, undefined, { numeric: true });
         });
     } catch (error) {
-        console.error("Fehler beim laden der Fragen:", error);
+        console.error("Fehler beim Laden der Fragen:", error);
     }
 }
 
@@ -330,34 +329,34 @@ async function fragenLaden() {
 // ---------------------------------------------
 // --- FRAGEN BEARBEITEN ---
 // ---------------------------------------------
-document.getElementById("fragenAbortBtn").addEventListener("click", () => {
-    document.getElementById("adminFragenBereich").style.display = "none";
-    document.getElementById("adminBereich").style.display = "block";
-    document.getElementById("fragenFrage").value = "";
-    document.getElementById("fragenAntwort").value = "";
-    document.getElementById("fragenNummer").value = "";
-    document.getElementById("fragenErrorMsg").innerText = "";
-    document.getElementById("fragenNummerLaden").value = 0;
+document.getElementById("fragen-abort-btn").addEventListener("click", () => {
+    document.getElementById("admin-fragen-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
+    document.getElementById("fragen-frage").value = "";
+    document.getElementById("fragen-antwort").value = "";
+    document.getElementById("fragen-nummer").value = "";
+    document.getElementById("fragen-error-msg").innerText = "";
+    document.getElementById("fragen-nummer-laden").value = 0;
 });
 
-document.getElementById("fragenLadenBtn").addEventListener("click", () => {
-    const index = document.getElementById("fragenNummerLaden").value;
+document.getElementById("fragen-laden-btn").addEventListener("click", () => {
+    const index = document.getElementById("fragen-nummer-laden").value;
 
     if (index >= alleFragen.length) return;
 
-    document.getElementById("fragenFrage").value = alleFragen[index].frage;
-    document.getElementById("fragenAntwort").value = alleFragen[index].antwort;
-    document.getElementById("fragenNummer").value = index;
+    document.getElementById("fragen-frage").value = alleFragen[index].frage;
+    document.getElementById("fragen-antwort").value = alleFragen[index].antwort;
+    document.getElementById("fragen-nummer").value = index;
 });
 
-document.getElementById("fragenSaveBtn").addEventListener("click", async () => {
-    const frageInput = document.getElementById("fragenFrage").value;
-    const antwortInput = document.getElementById("fragenAntwort").value;
-    const indexInput = document.getElementById("fragenNummer").value;
-    const errorMsg = document.getElementById("fragenErrorMsg");
+document.getElementById("fragen-save-btn").addEventListener("click", async () => {
+    const frageInput = document.getElementById("fragen-frage").value;
+    const antwortInput = document.getElementById("fragen-antwort").value;
+    const indexInput = document.getElementById("fragen-nummer").value;
+    const errorMsg = document.getElementById("fragen-error-msg");
 
     if (!frageInput || !antwortInput || !indexInput) {
-        errorMsg.innerText = "Bitte Frage und Antwort und Index angeben!"
+        errorMsg.innerText = "Bitte Frage, Antwort und Index angeben!";
         return;
     }
 
@@ -370,9 +369,9 @@ document.getElementById("fragenSaveBtn").addEventListener("click", async () => {
         const checkExists = await fb.getDocument("fragen", indexInput.toString());
 
         if (checkExists !== null) {
-            fb.updateDocument("fragen", indexInput.toString(), neueFrage);
+            await fb.updateDocument("fragen", indexInput.toString(), neueFrage);
         } else {
-            fb.createDocument("fragen", indexInput.toString(), neueFrage);
+            await fb.createDocument("fragen", indexInput.toString(), neueFrage);
         }
 
         errorMsg.innerText = "";
@@ -383,12 +382,12 @@ document.getElementById("fragenSaveBtn").addEventListener("click", async () => {
     
 });
 
-document.getElementById("fragenDeleteBtn").addEventListener("click", async () => {
-    const indexInput = document.getElementById("fragenNummer").value;
-    const errorMsg = document.getElementById("fragenErrorMsg");
+document.getElementById("fragen-delete-btn").addEventListener("click", async () => {
+    const indexInput = document.getElementById("fragen-nummer").value;
+    const errorMsg = document.getElementById("fragen-error-msg");
 
     if (!indexInput) {
-        errorMsg.innerText = "Bitte Index zum löschen angeben!"
+        errorMsg.innerText = "Bitte Index zum löschen angeben!";
         return;
     }
 
@@ -399,7 +398,7 @@ document.getElementById("fragenDeleteBtn").addEventListener("click", async () =>
         const checkExists = await fb.getDocument("fragen", indexInput.toString());
 
         if (checkExists !== null) {
-            fb.deleteDocument("fragen", indexInput.toString());
+            await fb.deleteDocument("fragen", indexInput.toString());
         } else {
             errorMsg.innerText = "Datei existiert nicht!";
             return;
