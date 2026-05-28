@@ -2,19 +2,20 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 
 const fb = new FirebaseService();
 
+document.getElementById("version").innerText = "v 1.1.2";
+
 // ---------------------------------------------
 // --- LOGIN LOGIK ---
 // ---------------------------------------------
-document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("login-btn").addEventListener("click", login);
 
-document.getElementById("gruppenName").addEventListener("keyup", (event) => {
+document.getElementById("login-name").addEventListener("keyup", (event) => {
     if (event.key === "Enter") {
-        //event.preventDefault(); // Verhindert das standardmäßige Neuladen der Seite
         login();
     }
 });
 
-document.getElementById("passwort").addEventListener("keyup", (event) => {
+document.getElementById("login-passwort").addEventListener("keyup", (event) => {
     if (event.key === "Enter") {
         //event.preventDefault(); // Verhindert das standardmäßige Neuladen der Seite
         login();
@@ -22,9 +23,9 @@ document.getElementById("passwort").addEventListener("keyup", (event) => {
 });
 
 async function login() {
-    const nameInput = document.getElementById("gruppenName").value.trim();
-    const passInput = document.getElementById("passwort").value;
-    const errorMsg = document.getElementById("errorMsg");
+    const nameInput = document.getElementById("login-name").value.trim();
+    const passInput = document.getElementById("login-passwort").value;
+    const errorMsg = document.getElementById("login-error-msg");
 
     // Leere Felder prüfen
     if (!nameInput || !passInput) {
@@ -48,54 +49,54 @@ async function login() {
 // ---------------------------------------------
 // --- CREATE LOGIK ---
 // ---------------------------------------------
-document.getElementById("gotoCreateBtn").addEventListener("click", async () => {
-    document.getElementById("loginBereich").style.display = "none";
-    document.getElementById("createBereich").style.display = "block";
-    document.getElementById("createGruppenName").focus();
+document.getElementById("goto-create-btn").addEventListener("click", async () => {
+    document.getElementById("login-bereich").style.display = "none";
+    document.getElementById("create-bereich").style.display = "block";
+    document.getElementById("create-name").focus();
 });
 
-document.getElementById("createAbortBtn").addEventListener("click", async () => {
-    document.getElementById("createGruppenName").value = "";
-    document.getElementById("createPasswort1").value = "";
-    document.getElementById("createPasswort2").value = "";
-    document.getElementById("createErrorMsg").innerText = "";
-    document.getElementById("createBereich").style.display = "none";
-    document.getElementById("loginBereich").style.display = "block";
+document.getElementById("create-abort-btn").addEventListener("click", async () => {
+    document.getElementById("create-name").value = "";
+    document.getElementById("create-passwort").value = "";
+    document.getElementById("create-passwort-wdh").value = "";
+    document.getElementById("create-error-msg").innerText = "";
+    document.getElementById("create-bereich").style.display = "none";
+    document.getElementById("login-bereich").style.display = "block";
 });
 
-document.getElementById("createBtn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("createGruppenName").value.trim();
-    const passInput1 = document.getElementById("createPasswort1").value;
-    const passInput2 = document.getElementById("createPasswort2").value;
-    const errorMsg = document.getElementById("createErrorMsg");
+document.getElementById("create-btn").addEventListener("click", async () => {
+    const nameInput = document.getElementById("create-name").value.trim();
+    const passInput = document.getElementById("create-passwort").value;
+    const passInputWdh = document.getElementById("create-passwort-wdh").value;
+    const errorMsg = document.getElementById("create-error-msg");
 
     // Leere Felder prüfen
-    if (!nameInput || !passInput1 || !passInput2) {
+    if (!nameInput || !passInput || !passInputWdh) {
         errorMsg.innerText = "Bitte alles ausfüllen.";
         return;
     }
 
     // Passwort prüfen
-    if (passInput1 !== passInput2) {
+    if (passInput !== passInputWdh) {
         errorMsg.innerText = "Passwort nicht gleich!";
         return;
     }
-    if (passInput1.length < 6) {
+    if (passInput.length < 6) {
         errorMsg.innerText = "Passwort muss mindestens 6 Zeichen lang sein.";
         return;
     }
 
     try {
-        await fb.registriereGruppe(nameInput, passInput1);
+        await fb.registriereGruppe(nameInput, passInput);
         
-        document.getElementById("gruppenName").value = nameInput;
-        document.getElementById("createGruppenName").value = "";
-        document.getElementById("createPasswort1").value = "";
-        document.getElementById("createPasswort2").value = "";
+        document.getElementById("login-name").value = nameInput;
+        document.getElementById("create-name").value = "";
+        document.getElementById("create-passwort").value = "";
+        document.getElementById("create-passwort-wdh").value = "";
         errorMsg.innerText = "";
-        document.getElementById("createBereich").style.display = "none";
-        document.getElementById("loginBereich").style.display = "block";
-        document.getElementById("passwort").focus();
+        document.getElementById("create-bereich").style.display = "none";
+        document.getElementById("login-bereich").style.display = "block";
+        document.getElementById("login-passwort").focus();
     } catch (error) {
         console.error(error);
         if (error.code === "auth/email-already-in-use") {

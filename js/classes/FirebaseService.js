@@ -168,34 +168,4 @@ export class FirebaseService {
         const daten = await this.getDocument("spielStatus", "global");
         return daten ? daten.adminNachricht : "";
     }
-
-    /**
-     * Ruft Frage ab
-     * @param {number} fragenNr - Nummer der Frage
-     * @returns {String} Frage als Text
-     */
-    async getFrage(fragenNr) {
-        const daten = await this.getDocument("fragen", fragenNr.toString());
-        return daten ? daten.frage : "";
-    }
-
-    /**
-     * Ruft Antwort ab
-     * @param {number} fragenNr - Nummer der Frage
-     * @returns {String} Antwort als Text
-     */
-    async getFrage(fragenNr) {
-        const daten = await this.getDocument("fragen", fragenNr.toString());
-        return daten ? daten.antwort : "";
-    }
-
-    /**
-     * Ruft Tipp ab
-     * @param {number} fragenNr - Nummer der Frage
-     * @returns {String} Tipp als Text
-     */
-    async getFrage(fragenNr) {
-        const daten = await this.getDocument("fragen", fragenNr.toString());
-        return daten ? daten.tipp : "";
-    }
 }

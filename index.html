@@ -7,28 +7,37 @@
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
+    <div id="top-bar">
+        <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
+    </div>
+    <img id="wave-top" src="assets/img/wave-top.svg" alt="">
 
-    <div id="adminNachrichtDisplay" style="display:none;">
+    <div id="admin-nachricht-display" style="display:none;">
 
     </div>
 
-    <div id="loginBereich">
+    <div id="login-bereich">
         <h2>Gruppe anmelden</h2>
-        <input type="text" id="gruppenName" placeholder="Gruppenname">
-        <input type="password" id="passwort" placeholder="Passwort"><br><br>
-        <button id="loginBtn">Starten</button>
-        <button id="gotoCreateBtn">Gruppe erstellen</button>
-        <p id="errorMsg" style="color:red;"></p>
+        <input type="text" id="login-name" placeholder="Gruppenname">
+        <input type="password" id="login-passwort" placeholder="Passwort"><br><br>
+        <button id="login-btn">Starten</button>
+        <button id="goto-create-btn">Gruppe erstellen</button>
+        <p id="login-error-msg" style="color:red;"></p>
     </div>
 
-    <div id="createBereich" style="display:none;">
+    <div id="create-bereich" style="display:none;">
         <h2>Gruppe erstellen</h2>
-        <input type="text" id="createGruppenName" placeholder="Gruppenname">
-        <input type="password" id="createPasswort1" placeholder="Passwort">
-        <input type="password" id="createPasswort2" placeholder="Passwort wiederholen"><br><br>
-        <button id="createBtn">Erstellen</button>
-        <button id="createAbortBtn">Abbrechen</button>
-        <p id="createErrorMsg" style="color:red;"></p>
+        <input type="text" id="create-name" placeholder="Gruppenname">
+        <input type="password" id="create-passwort" placeholder="Passwort">
+        <input type="password" id="create-passwort-wdh" placeholder="Passwort wiederholen"><br><br>
+        <button id="create-btn">Erstellen</button>
+        <button id="create-abort-btn">Abbrechen</button>
+        <p id="create-error-msg" style="color:red;"></p>
+    </div>
+
+    <img id="wave-bottom" src="assets/img/wave-bottom.svg" alt="">
+    <div id="bottom-bar">
+        <p id="version"></p>
     </div>
 
     <script type="module" src="js/auth.js"></script>

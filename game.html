@@ -7,30 +7,32 @@
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-    <div id="topBar">
-        <a id="topLink" href="index.html">Logout</a>
+    <div id="top-bar">
+        <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
+        <a id="top-link" href="index.html">Logout</a>
+    </div>
+    <img id="wave-top" src="assets/img/wave-top.svg" alt="">
+
+    <div id="admin-nachricht-display" style="display:none;">
+
     </div>
 
-    <div id="adminNachrichtDisplay" style="display:none;">
-
+    <div id="spiel-bereich" style="display:none;">
+        <h2 id="spiel-begruessung"></h2>
+        <div id="spiel-frage-nr"></div>
+        <div id="spiel-frage"></div>
     </div>
 
-    <div id="spielBereich" style="display:none;">
-        <h2 id="begruessung"></h2>
-        <div id="frageNr"></div>
-        <div id="frageContainer"></div>
-    </div>
-
-    <div id="adminBereich" style="display:none;">
-        <h2>Fortschritt aller Gruppen</h2>
-        <button id="adminPauseBtn">Spiel pausieren</button>
-        <button id="adminFreigabeBtn" style="display:none;"">Spiel freigeben</button>
-        <button id="adminGrpBearbeitenBtn">Gruppe bearbeiten</button>
-        <button id="adminFragenBearbeitenBtn">Fragen bearbeiten</button>
-        <button id="adminNachrichtBtn">Admin Nachricht</button>
-        <button id="refreshAdminBtn">Aktualisieren</button>
-        <p id="adminMengeStationen">Es gibt ... Stationen.</p>
-        <p id="adminStatus">Spiel ...</p>
+    <div id="admin-bereich" style="display:none;">
+        <h2>Admin Bereich</h2>
+        <button id="admin-pause-btn">Spiel pausieren</button>
+        <button id="admin-freigabe-btn" style="display:none;">Spiel freigeben</button>
+        <button id="admin-bearbeiten-btn">Gruppe bearbeiten</button>
+        <button id="admin-fragen-btn">Fragen bearbeiten</button>
+        <button id="admin-nachricht-btn">Admin Nachricht</button>
+        <button id="admin-refresh-btn">Aktualisieren</button>
+        <p id="admin-menge-stationen">Es gibt ... Stationen.</p>
+        <p id="admin-status">Spiel ...</p>
         <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background-color: #f2f2f2;">
@@ -39,39 +41,43 @@
                     <th style="padding: 8px;">Zeitstempel</th>
                 </tr>
             </thead>
-            <tbody id="adminTabelleBody">
+            <tbody id="admin-tabelle-body">
                 </tbody>
         </table>
     </div>
 
-    <div id="bearbeitenBereich" style="display: none;">
-        <input type="text" id="bearbeitenGruppenName" placeholder="Gruppenname">
-        <input type="number" min="0" id="bearbeitenFortschritt" placeholder="Fragen Index..."><br><br>
-        <button id="bearbeitenSaveBtn">Speichern</button>
-        <button id="bearbeitenDeleteBtn">Daten Löschen</button>
-        <button id="bearbeitenAbortBtn">Abbrechen</button>
-        <p id="bearbeitenErrorMsg" style="color:red;"></p>
+    <div id="admin-bearbeiten-bereich" style="display: none;">
+        <input type="text" id="bearbeiten-name" placeholder="Gruppenname">
+        <input type="number" min="0" id="bearbeiten-fortschritt" placeholder="Fragen Index..."><br><br>
+        <button id="bearbeiten-save-btn">Speichern</button>
+        <button id="bearbeiten-delete-btn">Daten Löschen</button>
+        <button id="bearbeiten-abort-btn">Abbrechen</button>
+        <p id="bearbeiten-error-msg" style="color:red;"></p>
     </div>
 
-    <div id="adminNachrichtBereich" style="display: none;">
-        <input type="text" id="adminNachricht" placeholder="Admin Nachricht..."><br><br>
-        <button id="nachrichtSaveBtn">Speichern</button>
-        <button id="nachrichtAbortBtn">Abbrechen</button>
-        <p id="bearbeitenErrorMsg" style="color:red;"></p>
+    <div id="admin-nachricht-bereich" style="display: none;">
+        <input type="text" id="admin-nachricht" placeholder="Admin Nachricht..."><br><br>
+        <button id="nachricht-save-btn">Speichern</button>
+        <button id="nachricht-abort-btn">Abbrechen</button>
+        <p id="nachrichten-error-msg" style="color:red;"></p>
     </div>
 
-    <div id="adminFragenBereich" style="display: none;">
-        <input type="number" min="0" id="fragenNummerLaden" value="0">
-        <button id="fragenLadenBtn">Laden</button>
-        <textarea id="fragenFrage" rows="5" placeholder="Frage..."></textarea>
-        <textarea id="fragenAntwort" placeholder="Antwort..."></textarea>
-        <input type="number" min="0" id="fragenNummer" placeholder="Index..."><br><br>
-        <button id="fragenSaveBtn">Speichern</button>
-        <button id="fragenDeleteBtn">Löschen</button>
-        <button id="fragenAbortBtn">Abbrechen</button>
-        <p id="fragenErrorMsg" style="color:red;"></p>
+    <div id="admin-fragen-bereich" style="display: none;">
+        <input type="number" min="0" id="fragen-nummer-laden" value="0">
+        <button id="fragen-laden-btn">Laden</button>
+        <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
+        <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
+        <input type="number" min="0" id="fragen-nummer" placeholder="Index..."><br><br>
+        <button id="fragen-save-btn">Speichern</button>
+        <button id="fragen-delete-btn">Löschen</button>
+        <button id="fragen-abort-btn">Abbrechen</button>
+        <p id="fragen-error-msg" style="color:red;"></p>
     </div>
 
+    <img id="wave-bottom" src="assets/img/wave-bottom.svg" alt="">
+    <div id="bottom-bar">
+        <p id="version"></p>
+    </div>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
