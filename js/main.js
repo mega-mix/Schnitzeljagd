@@ -1,10 +1,8 @@
-import { Fragenkatalog } from "./classes/Fragenkatalog.js";
 import { FirebaseService } from "./classes/FirebaseService.js";
 
 
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
-const katalog = new Fragenkatalog();
 
 let aktuelleGruppe = "";
 let aktuellerFortschritt = 0;
@@ -12,120 +10,35 @@ let alleFragen = [];
 
 
 // ---------------------------------------------
-// --- LOGIN LOGIK ---
+// --- LOGIN ABWARTEN ---
 // ---------------------------------------------
-document.getElementById("loginBtn").addEventListener("click", await login);
-document.getElementById("gruppenName").addEventListener("keyup", (event) => {
-    if (event.key === "Enter") {
-        //event.preventDefault(); // Verhindert das standardmäßige Neuladen der Seite
-        login();
-    }
-});
-document.getElementById("passwort").addEventListener("keyup", (event) => {
-    if (event.key === "Enter") {
-        //event.preventDefault(); // Verhindert das standardmäßige Neuladen der Seite
-        login();
-    }
-});
-
-async function login() {
-    const nameInput = document.getElementById("gruppenName").value.trim();
-    const passInput = document.getElementById("passwort").value;
-    const errorMsg = document.getElementById("errorMsg");
-
-    // Leere Felder prüfen
-    if (!nameInput || !passInput) {
-        errorMsg.innerText = "Bitte alles ausfüllen.";
-        return;
-    }
-
-    // Login
-    try {
-        const uid = await fb.loginGruppe(nameInput, passInput);
-        const daten = await fb.getDocument("gruppen", uid);
-
-        aktuelleGruppe = daten.gruppenName;
-        aktuellerFortschritt = daten.fortschritt || 0;
-        const freigegeben = await fb.istSpielFreigegeben();
-
-        if (aktuelleGruppe === "admin") {
-            document.getElementById("loginBereich").style.display = "none";
-            document.getElementById("adminBereich").style.display = "block";
-            ladeAlleGruppen();
-            return;
-        }
-
-        document.getElementById("loginBereich").style.display = "none";
-        document.getElementById("spielBereich").style.display = "block";
-        document.getElementById("begruessung").innerText = `Hallo ${aktuelleGruppe}`;
-
-
-        zeigeFrage();
+fb.onAuthChanged(async (user) => {
+    if (user) {
+        // User ist eingeloggt! Jetzt Daten laden
+        console.log("Eingeloggt mit UID:", user.uid);
         
-    } catch (error) {
-        console.error(error);
-        errorMsg.innerText = "Fehler beim Laden der Daten.";
-    }
-}
+        const daten = await fb.getDocument("gruppen", user.uid);
+        if (daten) {
+            aktuelleGruppe = daten.gruppenName;
+            aktuellerFortschritt = daten.fortschritt || 0;
 
-// ---------------------------------------------
-// --- CREATE LOGIK ---
-// ---------------------------------------------
-document.getElementById("gotoCreateBtn").addEventListener("click", async () => {
-    document.getElementById("loginBereich").style.display = "none";
-    document.getElementById("createBereich").style.display = "block";
-    document.getElementById("createGruppenName").focus();
-});
+            const freigegeben = await fb.istSpielFreigegeben();
+            
+            if (aktuelleGruppe === "admin") {
+                document.getElementById("adminBereich").style.display = "block";
+                ladeAlleGruppen();
+                return;
+            }
 
-document.getElementById("createAbortBtn").addEventListener("click", async () => {
-    document.getElementById("createGruppenName").value = "";
-    document.getElementById("createPasswort1").value = "";
-    document.getElementById("createPasswort2").value = "";
-    document.getElementById("createErrorMsg").innerText = "";
-    document.getElementById("createBereich").style.display = "none";
-    document.getElementById("loginBereich").style.display = "block";
-});
+            document.getElementById("spielBereich").style.display = "block";
+            document.getElementById("begruessung").innerText = `Hallo ${aktuelleGruppe}`;
 
-document.getElementById("createBtn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("createGruppenName").value.trim();
-    const passInput1 = document.getElementById("createPasswort1").value;
-    const passInput2 = document.getElementById("createPasswort2").value;
-    const errorMsg = document.getElementById("createErrorMsg");
 
-    // Leere Felder prüfen
-    if (!nameInput || !passInput1 || !passInput2) {
-        errorMsg.innerText = "Bitte alles ausfüllen.";
-        return;
-    }
-
-    // Passwort prüfen
-    if (passInput1 !== passInput2) {
-        errorMsg.innerText = "Passwort nicht gleich!";
-        return;
-    }
-    if (passInput1.length < 6) {
-        errorMsg.innerText = "Passwort muss mindestens 6 Zeichen lang sein.";
-        return;
-    }
-
-    try {
-        await fb.registriereGruppe(nameInput, passInput1);
-        
-        document.getElementById("gruppenName").value = nameInput;
-        document.getElementById("createGruppenName").value = "";
-        document.getElementById("createPasswort1").value = "";
-        document.getElementById("createPasswort2").value = "";
-        errorMsg.innerText = "";
-        document.getElementById("createBereich").style.display = "none";
-        document.getElementById("loginBereich").style.display = "block";
-        document.getElementById("passwort").focus();
-    } catch (error) {
-        console.error(error);
-        if (error.code === "auth/email-already-in-use") {
-            errorMsg.innerText = "Dieser Gruppenname ist schon vergeben.";
-        } else {
-            errorMsg.innerText = "Fehler bei der Registrierung.";
+            zeigeFrage();
         }
+    } else {
+        // Nicht eingeloggt? Rauswurf zurück zur Startseite!
+        window.location.href = "index.html";
     }
 });
 
@@ -137,8 +50,8 @@ async function ladeAlleGruppen() {
     const tabelleBody = document.getElementById("adminTabelleBody");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
-    document.getElementById("adminMengeStationen").innerText = `Es gibt ${katalog.anzahlFragen} Stationen`;
-    alleFragen = await fb.getAllDocuments("fragen");
+    document.getElementById("adminMengeStationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
+    await fragenLaden();
 
     const adminNachricht = await fb.getAdminNachricht();
 
@@ -345,7 +258,7 @@ async function zeigeFrage() {
         document.getElementById("adminNachrichtDisplay").style.display = "none";
     }
 
-    alleFragen = await fb.getAllDocuments("fragen");
+    await fragenLaden();
 
     if (!freigegeben) {
         container.innerHTML = `
@@ -356,7 +269,7 @@ async function zeigeFrage() {
         `;
         document.getElementById("statusBtn").addEventListener("click", zeigeFrage);
     }
-    else if (aktuellerFortschritt < katalog.anzahlFragen) {
+    else if (aktuellerFortschritt < alleFragen.length) {
         container.innerHTML = `
             <p>Station ${aktuellerFortschritt +1}</p>
             <p>${alleFragen[aktuellerFortschritt].frage}</p>
@@ -400,6 +313,18 @@ async function pruefeAntwort() {
     }
 }
 
+async function fragenLaden() {
+    try {
+        const geladeneFragen = await fb.getAllDocuments("fragen");
+
+        alleFragen = geladeneFragen.sort((a, b) => {
+            return a.id.localeCompare(b.id, undefined, { numeric: true });
+        });
+    } catch (error) {
+        console.error("Fehler beim laden der Fragen:", error);
+    }
+}
+
 
 // ---------------------------------------------
 // --- FRAGEN BEARBEITEN ---
@@ -407,6 +332,11 @@ async function pruefeAntwort() {
 document.getElementById("fragenAbortBtn").addEventListener("click", () => {
     document.getElementById("adminFragenBereich").style.display = "none";
     document.getElementById("adminBereich").style.display = "block";
+    document.getElementById("fragenFrage").value = "";
+    document.getElementById("fragenAntwort").value = "";
+    document.getElementById("fragenNummer").value = "";
+    document.getElementById("fragenErrorMsg").innerText = "";
+    document.getElementById("fragenNummerLaden").value = 0;
 });
 
 document.getElementById("fragenLadenBtn").addEventListener("click", () => {
@@ -416,12 +346,67 @@ document.getElementById("fragenLadenBtn").addEventListener("click", () => {
 
     document.getElementById("fragenFrage").value = alleFragen[index].frage;
     document.getElementById("fragenAntwort").value = alleFragen[index].antwort;
+    document.getElementById("fragenNummer").value = index;
 });
 
-document.getElementById("fragenSaveBtn").addEventListener("click", () => {
+document.getElementById("fragenSaveBtn").addEventListener("click", async () => {
+    const frageInput = document.getElementById("fragenFrage").value;
+    const antwortInput = document.getElementById("fragenAntwort").value;
+    const indexInput = document.getElementById("fragenNummer").value;
+    const errorMsg = document.getElementById("fragenErrorMsg");
+
+    if (!frageInput || !antwortInput || !indexInput) {
+        errorMsg.innerText = "Bitte Frage und Antwort und Index angeben!"
+        return;
+    }
+
+    const neueFrage = {
+        frage: frageInput,
+        antwort: antwortInput
+    };
+
+    try {
+        const checkExists = await fb.getDocument("fragen", indexInput.toString());
+
+        if (checkExists !== null) {
+            fb.updateDocument("fragen", indexInput.toString(), neueFrage);
+        } else {
+            fb.createDocument("fragen", indexInput.toString(), neueFrage);
+        }
+
+        errorMsg.innerText = "";
+    } catch (error) {
+        console.error("Daten werden nicht geladen:", error);
+        errorMsg.innerText = "Fehler beim speichern der Daten.";
+    } 
     
 });
 
-document.getElementById("fragenDeleteBtn").addEventListener("click", () => {
-    
+document.getElementById("fragenDeleteBtn").addEventListener("click", async () => {
+    const indexInput = document.getElementById("fragenNummer").value;
+    const errorMsg = document.getElementById("fragenErrorMsg");
+
+    if (!indexInput) {
+        errorMsg.innerText = "Bitte Index zum löschen angeben!"
+        return;
+    }
+
+    const entscheidung = confirm(`Möchten Sie die Frage ${indexInput} wirklich löschen?`);
+    if (!entscheidung) return;
+
+    try {
+        const checkExists = await fb.getDocument("fragen", indexInput.toString());
+
+        if (checkExists !== null) {
+            fb.deleteDocument("fragen", indexInput.toString());
+        } else {
+            errorMsg.innerText = "Datei existiert nicht!";
+            return;
+        }
+
+        errorMsg.innerText = "";
+    } catch (error) {
+        console.error("Daten werden nicht gelöscht:", error);
+        errorMsg.innerText = "Fehler beim löschen der Daten.";
+    } 
 });
