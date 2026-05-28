@@ -1,5 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
 
 export class FirebaseService {
     constructor() {
@@ -15,6 +17,51 @@ export class FirebaseService {
 
         this.app = initializeApp(config);
         this.db = getFirestore(this.app);
+        this.auth = getAuth(this.app);
+    }
+
+    /**
+     * Helfer-Methode, um aus einem Gruppennamen eine interne Fake-E-Mail zu bauen
+     */
+    _baueFakeEmail(name) {
+        return `${name.trim().toLowerCase()}@schnitzeljagd.intern`;
+    }
+
+    /**
+     * Registriert eine neue Gruppe im Auth-System UND legt sofort 
+     * das passende Fortschritts-Dokument in Firestore an (ID = UID).
+     */
+    async registriereGruppe(gruppenName, passwort) {
+        const fakeEmail = this._baueFakeEmail(gruppenName);
+        
+        // 1. Im Auth-System registrieren
+        const userCredential = await createUserWithEmailAndPassword(this.auth, fakeEmail, passwort);
+        const uid = userCredential.user.uid;
+
+        // 2. Direkt das geschützte Dokument in Firestore anlegen
+        const docRef = doc(this.db, "gruppen", uid);
+        await setDoc(docRef, {
+            gruppenName: gruppenName.trim(),
+            fortschritt: 0
+        });
+
+        return uid;
+    }
+
+    /**
+     * Loggt eine Gruppe ein und gibt deren UID zurück
+     */
+    async loginGruppe(gruppenName, passwort) {
+        const fakeEmail = this._baueFakeEmail(gruppenName);
+        const userCredential = await signInWithEmailAndPassword(this.auth, fakeEmail, passwort);
+        return userCredential.user.uid;
+    }
+
+    /**
+     * Gibt die UID des aktuell eingeloggten Benutzers zurück (oder null)
+     */
+    get aktuelleUid() {
+        return this.auth.currentUser ? this.auth.currentUser.uid : null;
     }
 
     /**
@@ -27,9 +74,7 @@ export class FirebaseService {
         const docRef = doc(this.db, collectionName, docId);
         const docSnap = await getDoc(docRef);
         
-        if (docSnap.exists()) {
-            return docSnap.data();
-        }
+        if (docSnap.exists()) return docSnap.data();
         return null;
     }
 
@@ -61,5 +106,79 @@ export class FirebaseService {
         });
         
         return dokumente;
+    }
+
+    /**
+     * Löscht ein bestimmtes Dokument aus einer Collection
+     * @param {string} collectionName - Name der Collection (z.B. "gruppen")
+     * @param {string} docId - ID des zu löschenden Dokuments (z.B. Gruppenname)
+     */
+    async deleteDocument(collectionName, docId) {
+        const docRef = doc(this.db, collectionName, docId);
+        await deleteDoc(docRef);
+    }
+
+    /**
+     * Holt den aktuellen globalen Spielstatus
+     * @returns {Promise<boolean>} true wenn freigegeben, false wenn pausiert
+     */
+    async istSpielFreigegeben() {
+        const daten = await this.getDocument("spielStatus", "global");
+        return daten ? daten.freigegeben : false; // Standardmäßig false, falls Dokument fehlt
+    }
+
+    /**
+     * Schaltet den globalen Spielstatus um (Nur für Admin)
+     * @param {boolean} status - true für freigeben, false für pausieren
+     */
+    async setzeSpielStatus(status) {
+        await this.updateDocument("spielStatus", "global", { freigegeben: status });
+    }
+
+    /**
+     * Setzt eine globale Admin Nachricht
+     * @param {string} msg - Text der Nachricht
+     */
+    async setzeAdminNachricht(msg) {
+        await this.updateDocument("spielStatus", "global", { adminNachricht: msg });
+    }
+
+    /**
+     * Ruft globale Admin Nachricht ab
+     * @returns {string} Text der Nachricht
+     */
+    async getAdminNachricht() {
+        const daten = await this.getDocument("spielStatus", "global");
+        return daten ? daten.adminNachricht : "";
+    }
+
+    /**
+     * Ruft Frage ab
+     * @param {number} fragenNr - Nummer der Frage
+     * @returns {String} Frage als Text
+     */
+    async getFrage(fragenNr) {
+        const daten = await this.getDocument("fragen", fragenNr.toString());
+        return daten ? daten.frage : "";
+    }
+
+    /**
+     * Ruft Antwort ab
+     * @param {number} fragenNr - Nummer der Frage
+     * @returns {String} Antwort als Text
+     */
+    async getFrage(fragenNr) {
+        const daten = await this.getDocument("fragen", fragenNr.toString());
+        return daten ? daten.antwort : "";
+    }
+
+    /**
+     * Ruft Tipp ab
+     * @param {number} fragenNr - Nummer der Frage
+     * @returns {String} Tipp als Text
+     */
+    async getFrage(fragenNr) {
+        const daten = await this.getDocument("fragen", fragenNr.toString());
+        return daten ? daten.tipp : "";
     }
 }

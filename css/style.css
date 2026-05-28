@@ -21,15 +21,27 @@
         color: var(--text-main);
         margin: 0;
         padding: 20px;
+        gap: 20px;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
     }
 
     /* Container für Login und Spielbereich (Karten-Look) */
-    #loginBereich, #spielBereich, #adminBereich {
+    #loginBereich, #spielBereich, #adminBereich, #createBereich, #bearbeitenBereich, #adminNachrichtBereich, #adminFragenBereich {
         background-color: var(--card-color);
+        padding: 30px 20px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(42, 130, 201, 0.08);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    #adminNachrichtDisplay {
+        background-color: yellow;
         padding: 30px 20px;
         border-radius: 16px;
         box-shadow: 0 8px 24px rgba(42, 130, 201, 0.08);
@@ -45,10 +57,10 @@
     }
 
     /* Input Felder Styling */
-    input[type="text"], input[type="password"] {
+    input[type="text"], input[type="password"], input[type="number"] {
         width: 100%;
         padding: 12px 16px;
-        margin-bottom: 16px;
+        margin-top: 16px;
         border: 2px solid #E2E8F0;
         border-radius: 8px;
         background-color: #F8FAFC;
@@ -69,10 +81,39 @@
         opacity: 0.7;
     }
 
+    textarea {
+        width: 100%;
+        padding: 12px 16px;
+        margin-top: 16px;
+        border: 2px solid #E2E8F0;
+        border-radius: 8px;
+        background-color: #F8FAFC;
+        color: #1C2D42;
+        font-size: 16px; /* Verhindert iOS-Auto-Zoom */
+        font-family: inherit; /* Übernimmt die Schriftart der Website */
+
+        height: 100px;
+        resize: none;
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+
+    textarea:focus {
+        border-color: #2A82C9; /* Dein Primär-Blau aus dem Konzept */
+        background-color: #FFFFFF;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(42, 130, 201, 0.15);
+    }
+
+    #fragenFrage {
+        height: 200px;
+    }
+
     /* Button Styling */
     button {
         width: 100%;
         padding: 14px;
+        margin-top: 16px;
         border: none;
         border-radius: 8px;
         background-color: var(--primary-color);
