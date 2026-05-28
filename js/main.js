@@ -21,9 +21,10 @@ fb.onAuthChanged(async (user) => {
         if (daten) {
             aktuelleGruppe = daten.gruppenName;
             aktuellerFortschritt = daten.fortschritt || 0;
+            await fragenLaden();
 
             const freigegeben = await fb.istSpielFreigegeben();
-            
+
             if (aktuelleGruppe === "admin") {
                 document.getElementById("adminBereich").style.display = "block";
                 ladeAlleGruppen();
@@ -50,8 +51,8 @@ async function ladeAlleGruppen() {
     const tabelleBody = document.getElementById("adminTabelleBody");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
-    document.getElementById("adminMengeStationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
     await fragenLaden();
+    document.getElementById("adminMengeStationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
 
     const adminNachricht = await fb.getAdminNachricht();
 
