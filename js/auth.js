@@ -2,7 +2,7 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.1.2";
+document.getElementById("version").innerText = "v 1.2.0";
 
 // ---------------------------------------------
 // --- LOGIN LOGIK ---
@@ -37,7 +37,7 @@ async function login() {
     try {
         await fb.loginGruppe(nameInput, passInput);
 
-        window.location.href = "game.html";
+        window.location.href = "start.html";
         
     } catch (error) {
         console.error(error);
