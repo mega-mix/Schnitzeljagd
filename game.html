@@ -9,7 +9,10 @@
 <body>
     <div id="top-bar">
         <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
-        <a id="top-link" href="index.html">Logout</a>
+        <div id="top-links">
+            <a id="top-link" href="index.html">Logout</a>
+            <a id="top-link" href="start.html">Startseite</a>
+        </div>
     </div>
     <img id="wave-top" src="assets/img/wave-top.svg" alt="">
 
@@ -38,6 +41,7 @@
                 <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Gruppe</th>
                     <th style="padding: 8px;">Fortschritt</th>
+                    <th style="padding: 8px;">Katalog</th>
                     <th style="padding: 8px;">Zeitstempel</th>
                 </tr>
             </thead>
@@ -48,7 +52,8 @@
 
     <div id="admin-bearbeiten-bereich" style="display: none;">
         <input type="text" id="bearbeiten-name" placeholder="Gruppenname">
-        <input type="number" min="0" id="bearbeiten-fortschritt" placeholder="Fragen Index..."><br><br>
+        <input type="number" min="1" id="bearbeiten-fortschritt" placeholder="Station Nummer...">
+        <input type="number" min="1" id="bearbeiten-katalog" placeholder="Katalog Nummer..."><br><br>
         <button id="bearbeiten-save-btn">Speichern</button>
         <button id="bearbeiten-delete-btn">Daten Löschen</button>
         <button id="bearbeiten-abort-btn">Abbrechen</button>
@@ -78,6 +83,6 @@
     <div id="bottom-bar">
         <p id="version"></p>
     </div>
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/game.js"></script>
 </body>
 </html>

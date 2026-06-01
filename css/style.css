@@ -69,14 +69,17 @@
         height: 40px;
     }
 
+    #top-links {
+        position: absolute;
+        top: 12px;
+        left: 50px;
+    }
     #top-link {
         color: white;
-        position: absolute;
-        margin-top: 12px;
         margin-left: 12px;
     }
 
-    #login-bereich, #spiel-bereich, #admin-bereich, #create-bereich, #admin-bearbeiten-bereich, #admin-nachricht-bereich, #admin-fragen-bereich {
+    #login-bereich, #admin-spieler-bereich, #start-bereich, #spiel-bereich, #admin-bereich, #create-bereich, #admin-bearbeiten-bereich, #admin-nachricht-bereich, #admin-fragen-bereich {
         background-color: var(--card-color);
         margin-top: 40px;
         padding: 30px 20px;

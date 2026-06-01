@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ein Tag mit Lea und Paul</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div id="top-bar">
+        <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
+        <div id="top-links">
+            <a id="top-link" href="index.html">Logout</a>
+            <a id="top-link" href="start.html">Startseite</a>
+        </div>
+    </div>
+    <img id="wave-top" src="assets/img/wave-top.svg" alt="">
+
+    <div id="admin-nachricht-display" style="display:none;">
+    </div>
+
+    <div id="admin-bereich" style="display:none;">
+        <h2>Admin Bereich</h2>
+        <button id="admin-pause-btn">Spiel pausieren</button>
+        <button id="admin-freigabe-btn" style="display:none;">Spiel freigeben</button>
+        <button id="admin-bearbeiten-btn">Gruppe bearbeiten</button>
+        <button id="admin-fragen-btn">Fragen bearbeiten</button>
+        <button id="admin-nachricht-btn">Admin Nachricht</button>
+        <button id="admin-spieler-btn">Spieler anzeigen</button>
+        <button id="admin-refresh-btn">Aktualisieren</button>
+        <p id="admin-menge-stationen">Es gibt ... Stationen.</p>
+        <p id="admin-status">Spiel ...</p>
+        <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Gruppe</th>
+                    <th style="padding: 8px;">Fortschritt</th>
+                    <th style="padding: 8px;">Katalog</th>
+                    <th style="padding: 8px;">Zeitstempel</th>
+                </tr>
+            </thead>
+            <tbody id="admin-tabelle-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="admin-spieler-bereich" style="display: none;">
+        <button id="spieler-abort-btn">Zurück</button>
+        <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Spieler</th>
+                    <th style="padding: 8px;">letzter Login</th>
+                </tr>
+            </thead>
+            <tbody id="spieler-tabelle-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="admin-bearbeiten-bereich" style="display: none;">
+        <input type="text" id="bearbeiten-name" placeholder="Gruppenname">
+        <input type="number" min="1" id="bearbeiten-fortschritt" placeholder="Station Nummer...">
+        <input type="number" min="1" id="bearbeiten-katalog" placeholder="Katalog Nummer..."><br><br>
+        <button id="bearbeiten-save-btn">Speichern</button>
+        <button id="bearbeiten-delete-btn">Daten Löschen</button>
+        <button id="bearbeiten-abort-btn">Abbrechen</button>
+        <p id="bearbeiten-error-msg" style="color:red;"></p>
+    </div>
+
+    <div id="admin-nachricht-bereich" style="display: none;">
+        <input type="text" id="admin-nachricht" placeholder="Admin Nachricht..."><br><br>
+        <button id="nachricht-save-btn">Speichern</button>
+        <button id="nachricht-abort-btn">Abbrechen</button>
+        <p id="nachrichten-error-msg" style="color:red;"></p>
+    </div>
+
+    <div id="admin-fragen-bereich" style="display: none;">
+        <input type="number" min="0" id="fragen-nummer-laden" value="0">
+        <input type="number" min="1" id="fragen-katalog-laden" value="1">
+        <button id="fragen-laden-btn">Laden</button>
+        <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
+        <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
+        <input type="number" min="0" id="fragen-nummer" placeholder="Index...">
+        <input type="number" min="1" id="fragen-katalog" placeholder="Katalog..."><br><br>
+        <button id="fragen-save-btn">Speichern</button>
+        <button id="fragen-delete-btn">Löschen</button>
+        <button id="fragen-abort-btn">Abbrechen</button>
+        <p id="fragen-error-msg" style="color:red;"></p>
+    </div>
+
+    <img id="wave-bottom" src="assets/img/wave-bottom.svg" alt="">
+    <div id="bottom-bar">
+        <p id="version"></p>
+    </div>
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

@@ -48,7 +48,8 @@ export class FirebaseService {
         const docRef = doc(this.db, "gruppen", uid);
         await setDoc(docRef, {
             gruppenName: gruppenName.trim(),
-            fortschritt: 0
+            fortschritt: 0,
+            katalog: 1
         });
 
         return uid;
@@ -60,6 +61,7 @@ export class FirebaseService {
     async loginGruppe(gruppenName, passwort) {
         const fakeEmail = this._baueFakeEmail(gruppenName);
         const userCredential = await signInWithEmailAndPassword(this.auth, fakeEmail, passwort);
+        await this.updateDocument("gruppen", userCredential.user.uid, { lastLogin: Date.now() });
         return userCredential.user.uid;
     }
 
