@@ -4,12 +4,12 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.2.0";
+document.getElementById("version").innerText = "v 1.3.0";
 
-let aktuelleGruppe = "";
-let aktuellerFortschritt = 0;
-let katalogNr = 0;
 let alleFragen = [];
+let spielStatus = {};
+let spielerInfo = {};
+let spielerUid = "";
 
 
 // ---------------------------------------------
@@ -17,13 +17,10 @@ let alleFragen = [];
 // ---------------------------------------------
 fb.onAuthChanged(async (user) => {
     if (user) {
-        const daten = await fb.getDocument("gruppen", user.uid);
-        if (daten) {
-            aktuelleGruppe = daten.gruppenName;
-            aktuellerFortschritt = daten.fortschritt || 0;
-            katalogNr = daten.katalog;
-
-            if (aktuelleGruppe === "admin") {
+        spielerUid = user.uid;
+        spielerInfo = await fb.getDocument("gruppen", spielerUid);
+        if (spielerInfo) {
+            if (spielerInfo.gruppenName === "admin") {
                 document.getElementById("admin-bereich").style.display = "block";
                 ladeAlleGruppen();
             }
@@ -39,39 +36,50 @@ fb.onAuthChanged(async (user) => {
 // --- ADMIN LOGIK ---
 // ---------------------------------------------
 async function ladeAlleGruppen() {
+    spielStatus = await fb.getDocument("spielStatus", "global");
+
     const tabelleBody = document.getElementById("admin-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
-    await fragenLaden(katalogNr);
+    await fragenLaden(spielerInfo.katalog);
     document.getElementById("admin-menge-stationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
 
-    const adminNachricht = await fb.getAdminNachricht();
-
-    if (adminNachricht !== "") {
+    document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
+    if (spielStatus.adminNachricht !== "") {
         document.getElementById("admin-nachricht-display").style.display = "block";
-        document.getElementById("admin-nachricht-display").innerText = adminNachricht;
     } else {
         document.getElementById("admin-nachricht-display").style.display = "none";
     }
 
-    const freigegeben = await fb.istSpielFreigegeben();
-
-    if (freigegeben) {
-        document.getElementById("admin-pause-btn").style.display = "block";
-        document.getElementById("admin-freigabe-btn").style.display = "none";
+    if (spielStatus.freigegeben) {
+        document.getElementById("admin-freigabe-btn").innerText = "Spiel pausieren";
     } else {
-        document.getElementById("admin-pause-btn").style.display = "none";
-        document.getElementById("admin-freigabe-btn").style.display = "block";
+        document.getElementById("admin-freigabe-btn").innerText = "Spiel freigeben";
+    }
+
+    if (spielStatus.tipps) {
+        document.getElementById("admin-tipp-btn").innerText = "Tipps sperren";
+    } else {
+        document.getElementById("admin-tipp-btn").innerText = "Tipps freigeben";
     }
 
     const status = document.getElementById("admin-status");
+    const statusTipp = document.getElementById("admin-status-tipp");
 
-    if (freigegeben) {
+    if (spielStatus.freigegeben) {
         status.innerText ="Spiel aktiv";
         status.style.color = "#2ECC71";
     } else {
         status.innerText ="Spiel pausiert";
         status.style.color = "#E74C3C";
+    }
+
+    if (spielStatus.tipps) {
+        statusTipp.innerText ="Tipps aktiv";
+        statusTipp.style.color = "#2ECC71";
+    } else {
+        statusTipp.innerText ="Tipps gesperrt";
+        statusTipp.style.color = "#E74C3C";
     }
 
     try {
@@ -96,9 +104,10 @@ async function ladeAlleGruppen() {
                 
                 htmlInhalt += `
                     <tr>
-                        <td style="padding: 8px;">${gruppe.gruppenName}</td> 
-                        <td style="padding: 8px;">Station ${fortschritt + 1}</td>
+                        <td style="padding: 8px;">${gruppe.gruppenName}</td>
                         <td style="padding: 8px;">${gruppe.katalog}</td>
+                        <td style="padding: 8px;">${fortschritt + 1}</td>
+                        <td style="padding: 8px;">${gruppe.tipps}</td>
                         <td style="padding: 8px;">${uhrzeit}</td>
                     </tr>
                 `;
@@ -130,13 +139,13 @@ document.getElementById("admin-nachricht-btn").addEventListener("click", async (
     document.getElementById("admin-nachricht-bereich").style.display = "block";
 });
 
-document.getElementById("admin-pause-btn").addEventListener("click", async () => {
-    await fb.setzeSpielStatus(false);
+document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
+    await fb.setzeSpielStatus(!spielStatus.freigegeben);
     ladeAlleGruppen();
 });
 
-document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
-    await fb.setzeSpielStatus(true);
+document.getElementById("admin-tipp-btn").addEventListener("click", async () => {
+    await fb.setzeTippStatus(!spielStatus.tipps);
     ladeAlleGruppen();
 });
 
@@ -396,9 +405,9 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
     } 
 });
 
-async function fragenLaden(katalogNr) {
+async function fragenLaden(katalog) {
     try {
-        const katalogPath = "fragen" + katalogNr;
+        const katalogPath = "fragen" + katalog;
         const geladeneFragen = await fb.getAllDocuments(katalogPath);
 
         alleFragen = geladeneFragen.sort((a, b) => {

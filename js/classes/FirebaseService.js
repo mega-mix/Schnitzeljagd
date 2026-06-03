@@ -49,7 +49,8 @@ export class FirebaseService {
         await setDoc(docRef, {
             gruppenName: gruppenName.trim(),
             fortschritt: 0,
-            katalog: 1
+            katalog: 1,
+            tipps: 0
         });
 
         return uid;
@@ -152,6 +153,23 @@ export class FirebaseService {
      */
     async setzeSpielStatus(status) {
         await this.updateDocument("spielStatus", "global", { freigegeben: status });
+    }
+
+    /**
+     * Holt den aktuellen Tipp Spielstatus
+     * @returns {Promise<boolean>} true wenn freigegeben, false wenn deaktiviert
+     */
+    async istTippFreigegeben() {
+        const daten = await this.getDocument("spielStatus", "global");
+        return daten ? daten.tipps : false; // Standardmäßig false, falls Dokument fehlt
+    }
+
+    /**
+     * Schaltet den Tipp Spielstatus um (Nur für Admin)
+     * @param {boolean} status - true für freigeben, false für deaktiviert
+     */
+    async setzeTippStatus(status) {
+        await this.updateDocument("spielStatus", "global", { tipps: status });
     }
 
     /**
