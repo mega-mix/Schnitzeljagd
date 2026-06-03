@@ -4,12 +4,12 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.2.0";
+document.getElementById("version").innerText = "v 1.3.0";
 
-let aktuelleGruppe = "";
-let aktuellerFortschritt = 0;
-let katalogNr = 0;
 let alleFragen = [];
+let spielStatus = {};
+let spielerInfo = {};
+let spielerUid = "";
 
 
 // ---------------------------------------------
@@ -17,14 +17,11 @@ let alleFragen = [];
 // ---------------------------------------------
 fb.onAuthChanged(async (user) => {
     if (user) {
-        const daten = await fb.getDocument("gruppen", user.uid);
-        if (daten) {
-            aktuelleGruppe = daten.gruppenName;
-            aktuellerFortschritt = daten.fortschritt || 0;
-            katalogNr = daten.katalog;
-
+        spielerUid = user.uid;
+        spielerInfo = await fb.getDocument("gruppen", spielerUid);
+        if (spielerInfo) {
             document.getElementById("spiel-bereich").style.display = "block";
-            document.getElementById("spiel-begruessung").innerText = `Hallo ${aktuelleGruppe}`;
+            document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.gruppenName}`;
 
             zeigeFrage();
         }
@@ -36,37 +33,70 @@ fb.onAuthChanged(async (user) => {
 
 
 // ---------------------------------------------
+// --- EINMALIGE EVENT-LISTENER ---
+// ---------------------------------------------
+document.getElementById("spiel-tipp-btn").addEventListener("click", async () => {
+    const spielTipp = document.getElementById("spiel-tipp");
+
+    if (spielerInfo.fortschritt >= alleFragen.length) return;
+
+    spielerInfo.tipps = (spielerInfo.tipps || 0) + 1;
+    
+    spielTipp.innerText = alleFragen[spielerInfo.fortschritt].tipp1 || "Kein Tipp verfügbar.";
+
+    try {
+        await fb.updateDocument("gruppen", spielerUid, {
+            tipps: spielerInfo.tipps,
+        });
+    } catch (error) {
+        console.error(error);
+        if (feedback) feedback.innerText = "Fehler beim Speichern der Tipps.";
+    }
+});
+
+
+// ---------------------------------------------
 // --- SPIEL LOGIK ---
 // ---------------------------------------------
 async function zeigeFrage() {
-    const container = document.getElementById("spiel-frage");
-    const freigegeben = await fb.istSpielFreigegeben();
-    const adminNachricht = await fb.getAdminNachricht();
+    spielStatus = await fb.getDocument("spielStatus", "global");
+    spielerInfo = await fb.getDocument("gruppen", spielerUid);
+    await fragenLaden(spielerInfo.katalog);
 
-    if (adminNachricht !== "") {
+    const container = document.getElementById("spiel-frage");
+    const spielTipp = document.getElementById("spiel-tipp");
+
+    document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
+    if (spielStatus.adminNachricht !== "") {
         document.getElementById("admin-nachricht-display").style.display = "block";
-        document.getElementById("admin-nachricht-display").innerText = adminNachricht;
     } else {
         document.getElementById("admin-nachricht-display").style.display = "none";
     }
 
-    await fragenLaden(katalogNr);
+    spielTipp.innerText = "";
 
-    if (!freigegeben) {
+    if (!spielStatus.freigegeben) {
         container.innerHTML = `
-            <p>Station ${aktuellerFortschritt +1}</p>
+            <p>Station ${spielerInfo.fortschritt +1}</p>
             <h3>Das Spiel ist aktuell pausiert.</h3>
             <p>Bitte warte auf die Freigabe von Björn.</p>
             <button id="status-btn">Aktualisieren</button>
         `;
         document.getElementById("status-btn").addEventListener("click", () => location.reload());
+        document.getElementById("spiel-tipp-container").style.display = "none";
     }
-    else if (aktuellerFortschritt < alleFragen.length) {
+    else if (spielerInfo.fortschritt < alleFragen.length) {
+        if (spielStatus.tipps) {
+            document.getElementById("spiel-tipp-container").style.display = "block";
+        } else {
+            document.getElementById("spiel-tipp-container").style.display = "none";
+        }
+
         // Sonderform für Holland!
-        if (aktuellerFortschritt < 14) {
+        if (spielerInfo.fortschritt < 14) {
             container.innerHTML = `
-                <p>Station ${aktuellerFortschritt +1}</p>
-                <p>${alleFragen[aktuellerFortschritt].frage}</p>
+                <p>Station ${spielerInfo.fortschritt +1}</p>
+                <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
                 <textarea id="antwort-input" placeholder="Eure Antwort"></textarea>
                 <button id="antwort-btn">Antwort senden</button>
                 <p id="spiel-feedback" style="color:red;"></p>
@@ -74,33 +104,38 @@ async function zeigeFrage() {
             document.getElementById("antwort-btn").addEventListener("click", pruefeAntwort);
         } else {
             container.innerHTML = `
-                <p>Station ${aktuellerFortschritt +1}</p>
-                <p>${alleFragen[aktuellerFortschritt].frage}</p>
+                <p>Station ${spielerInfo.fortschritt +1}</p>
+                <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
                 <p id="spiel-feedback" style="color:red;"></p>
             `;
         }
     }
     else {
         container.innerHTML = `<h3>Glückwunsch! Ihr habt die Suche erfolgreich gemeistert! 🎉</h3>`;
+        document.getElementById("spiel-tipp-container").style.display = "none";
     }
 }
 
 async function pruefeAntwort() {
+    const antwortBtn = document.getElementById("antwort-btn");
     const spielerAntwort = document.getElementById("antwort-input").value;
     const feedback = document.getElementById("spiel-feedback");
     let istRichtig = false;
 
-    if (aktuellerFortschritt < alleFragen.length) {
-        const korrekteAntwort = alleFragen[aktuellerFortschritt].antwort.toLowerCase().trim();
+    if (spielerInfo.fortschritt < alleFragen.length) {
+        const korrekteAntwort = alleFragen[spielerInfo.fortschritt].antwort.toLowerCase().trim();
         const bereinigteSpielerAntwort = spielerAntwort.toLowerCase().trim();
         istRichtig = bereinigteSpielerAntwort === korrekteAntwort;
     }
 
     if (istRichtig) {
-        aktuellerFortschritt++;
+        // Button sperren, um Doppelklicks während des Uploads abzufangen
+        if (antwortBtn) antwortBtn.disabled = true;
+
+        spielerInfo.fortschritt++;
         try {
             await fb.updateDocument("gruppen", fb.aktuelleUid, {
-                fortschritt: aktuellerFortschritt,
+                fortschritt: spielerInfo.fortschritt,
                 zeitstempel: Date.now()
             });
             zeigeFrage();
@@ -114,9 +149,9 @@ async function pruefeAntwort() {
     }
 }
 
-async function fragenLaden(katalogNr) {
+async function fragenLaden(katalog) {
     try {
-        const katalogPath = "fragen" + katalogNr;
+        const katalogPath = "fragen" + katalog;
         const geladeneFragen = await fb.getAllDocuments(katalogPath);
 
         alleFragen = geladeneFragen.sort((a, b) => {

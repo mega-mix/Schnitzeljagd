@@ -4,12 +4,12 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.2.0";
+document.getElementById("version").innerText = "v 1.3.0";
 
-let aktuelleGruppe = "";
-let aktuellerFortschritt = 0;
-let katalogNr = 0;
 let alleFragen = [];
+let spielStatus = {};
+let spielerInfo = {};
+let spielerUid = "";
 
 
 // ---------------------------------------------
@@ -17,26 +17,21 @@ let alleFragen = [];
 // ---------------------------------------------
 fb.onAuthChanged(async (user) => {
     if (user) {
-        const daten = await fb.getDocument("gruppen", user.uid);
-        if (daten) {
-            aktuelleGruppe = daten.gruppenName;
-            aktuellerFortschritt = daten.fortschritt || 0;
-            katalogNr = daten.katalog;
+        spielerUid = user.uid;
+        spielerInfo = await fb.getDocument("gruppen", spielerUid);
+        if (spielerInfo) {
+            spielStatus = await fb.getDocument("spielStatus", "global");
 
-            const freigegeben = await fb.istSpielFreigegeben();
-
-            if (aktuelleGruppe === "admin") {
+            if (spielerInfo.gruppenName === "admin") {
                 document.getElementById("start-admin-btn").style.display = "block";
             }
 
             document.getElementById("start-bereich").style.display = "block";
-            document.getElementById("start-begruessung").innerText = `Hallo ${aktuelleGruppe}`;
+            document.getElementById("start-begruessung").innerText = `Hallo ${spielerInfo.gruppenName}`;
 
-            const adminNachricht = await fb.getAdminNachricht();
-
-            if (adminNachricht !== "") {
+            document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
+            if (spielStatus.adminNachricht !== "") {
                 document.getElementById("admin-nachricht-display").style.display = "block";
-                document.getElementById("admin-nachricht-display").innerText = adminNachricht;
             } else {
                 document.getElementById("admin-nachricht-display").style.display = "none";
             }
