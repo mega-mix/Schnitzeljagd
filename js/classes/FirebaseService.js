@@ -50,7 +50,8 @@ export class FirebaseService {
             gruppenName: gruppenName.trim(),
             fortschritt: 0,
             katalog: 1,
-            tipps: 0
+            tipps: 0,
+            antworten: 0
         });
 
         return uid;

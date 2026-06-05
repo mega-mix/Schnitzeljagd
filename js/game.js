@@ -4,7 +4,7 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.3.0";
+document.getElementById("version").innerText = "v 1.4.0";
 
 let alleFragen = [];
 let spielStatus = {};
@@ -128,6 +128,8 @@ async function pruefeAntwort() {
         istRichtig = bereinigteSpielerAntwort === korrekteAntwort;
     }
 
+    spielerInfo.antworten = (spielerInfo.antworten || 0) + 1;
+
     if (istRichtig) {
         // Button sperren, um Doppelklicks während des Uploads abzufangen
         if (antwortBtn) antwortBtn.disabled = true;
@@ -136,16 +138,31 @@ async function pruefeAntwort() {
         try {
             await fb.updateDocument("gruppen", fb.aktuelleUid, {
                 fortschritt: spielerInfo.fortschritt,
+                antworten: spielerInfo.antworten,
                 zeitstempel: Date.now()
             });
             zeigeFrage();
         } catch (error) {
             console.error(error);
             feedback.innerText = "Fehler beim Speichern des Fortschritts.";
+            if (antwortBtn) antwortBtn.disabled = false;
         }
     } else {
         feedback.style.color = "red";
         feedback.innerText = "Falsche Antwort! Versucht es noch einmal.";
+
+        if (antwortBtn) antwortBtn.disabled = true;
+
+        try {
+            await fb.updateDocument("gruppen", fb.aktuelleUid, {
+                antworten: spielerInfo.antworten
+            });
+        } catch (error) {
+            console.error(error);
+            feedback.innerText = "Fehler beim Speichern des Fortschritts.";
+        } finally {
+            if (antwortBtn) antwortBtn.disabled = false;
+        }
     }
 }
 

@@ -4,7 +4,7 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.3.0";
+document.getElementById("version").innerText = "v 1.4.0";
 
 let alleFragen = [];
 let spielStatus = {};
@@ -108,6 +108,7 @@ async function ladeAlleGruppen() {
                         <td style="padding: 8px;">${gruppe.katalog}</td>
                         <td style="padding: 8px;">${fortschritt + 1}</td>
                         <td style="padding: 8px;">${gruppe.tipps}</td>
+                        <td style="padding: 8px;">${gruppe.antworten}</td>
                         <td style="padding: 8px;">${uhrzeit}</td>
                     </tr>
                 `;
@@ -243,9 +244,11 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
     const nameInput = document.getElementById("bearbeiten-name").value.trim();
     const stationInput = parseInt(document.getElementById("bearbeiten-fortschritt").value);
     const katalogInput = parseInt(document.getElementById("bearbeiten-katalog").value);
+    const antwortenInput = parseInt(document.getElementById("bearbeiten-antworten").value);
     const errorMsg = document.getElementById("bearbeiten-error-msg");
 
     if (!nameInput || !stationInput || !katalogInput) {
+        // Sicherheit antwortenInput != 0 einfügen
         errorMsg.innerText = "Bitte alle Felder ausfüllen.";
         return;
     } else {
@@ -259,6 +262,7 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
                     await fb.updateDocument("gruppen", gefundeneGruppe.id, {
                         fortschritt: (stationInput -1),
                         katalog: katalogInput,
+                        antworten: antwortenInput,
                         zeitstempel: Date.now()
                     });
                 }
@@ -266,6 +270,7 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
                 document.getElementById("bearbeiten-name").value = "";
                 document.getElementById("bearbeiten-fortschritt").value = "";
                 document.getElementById("bearbeiten-katalog").value = "";
+                document.getElementById("bearbeiten-antworten").value = "";
                 errorMsg.innerText = "";
                 document.getElementById("admin-bearbeiten-bereich").style.display = "none";
                 document.getElementById("admin-bereich").style.display = "block";
