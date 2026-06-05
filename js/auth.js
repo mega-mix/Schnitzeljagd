@@ -2,7 +2,7 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.0";
+document.getElementById("version").innerText = "v 1.4.1";
 
 // ---------------------------------------------
 // --- LOGIN LOGIK ---

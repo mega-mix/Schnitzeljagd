@@ -4,7 +4,7 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.0";
+document.getElementById("version").innerText = "v 1.4.1";
 
 let alleFragen = [];
 let spielStatus = {};

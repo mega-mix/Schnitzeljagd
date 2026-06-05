@@ -4,7 +4,7 @@ import { FirebaseService } from "./classes/FirebaseService.js";
 // Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.0";
+document.getElementById("version").innerText = "v 1.4.1";
 
 let alleFragen = [];
 let spielStatus = {};
@@ -247,8 +247,7 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
     const antwortenInput = parseInt(document.getElementById("bearbeiten-antworten").value);
     const errorMsg = document.getElementById("bearbeiten-error-msg");
 
-    if (!nameInput || !stationInput || !katalogInput) {
-        // Sicherheit antwortenInput != 0 einfügen
+    if (!nameInput || !stationInput || !katalogInput || isNaN(antwortenInput)) {
         errorMsg.innerText = "Bitte alle Felder ausfüllen.";
         return;
     } else {
