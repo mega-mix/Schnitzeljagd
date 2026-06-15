@@ -156,7 +156,7 @@ document.getElementById("admin-spieler-btn").addEventListener("click", () => {
 
 
 // ---------------------------------------------
-// --- SPIELER BEARBEITEN ---
+// --- SPIELER ZEIGEN ---
 // ---------------------------------------------
 document.getElementById("spieler-abort-btn").addEventListener("click", () => {
     document.getElementById("admin-spieler-bereich").style.display = "none";
@@ -217,12 +217,10 @@ document.getElementById("bearbeiten-delete-btn").addEventListener("click", async
     const errorMsg = document.getElementById("bearbeiten-error-msg");
 
     try {
-        // Alle Dokumente holen, um das mit dem richtigen Namen zu finden
         const alleSpieler = await fb.getAllDocuments("spieler");
-        const gefundeneSpieler = alleSpieler.find(g => g.spielerName === nameInput);
+        const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
 
         if (gefundeneSpieler) {
-            // gefundeneSpieler.id enthält die korrekte UID für den Löschbefehl
             await fb.deleteDocument("spieler", gefundeneSpieler.id);
             alert(`Spieler ${nameInput} gelöscht.`);
         } else {
@@ -244,23 +242,28 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
     const stationInput = parseInt(document.getElementById("bearbeiten-fortschritt").value);
     const katalogInput = parseInt(document.getElementById("bearbeiten-katalog").value);
     const antwortenInput = parseInt(document.getElementById("bearbeiten-antworten").value);
+    const tippInput = parseInt(document.getElementById("bearbeiten-tipp").value);
     const errorMsg = document.getElementById("bearbeiten-error-msg");
 
     if (!nameInput || !stationInput || !katalogInput || isNaN(antwortenInput)) {
         errorMsg.innerText = "Bitte alle Felder ausfüllen.";
         return;
     } else {
+        const bearbeitenSaveBtn = document.getElementById("bearbeiten-save-btn");
+        bearbeitenSaveBtn.disabled = true;
+        bearbeitenSaveBtn.innerText = "Bitte warten...";
+
         try {
             const alleSpieler = await fb.getAllDocuments("spieler");
             const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
 
             if (gefundeneSpieler) {
                 if (stationInput >= 1) {
-                    // Update über die UID (gefundeneSpieler.id) abschicken
                     await fb.updateDocument("spieler", gefundeneSpieler.id, {
                         fortschritt: (stationInput -1),
                         katalog: katalogInput,
                         antworten: antwortenInput,
+                        tipps: tippInput,
                         zeitstempel: Date.now()
                     });
                 }
@@ -269,10 +272,14 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
                 document.getElementById("bearbeiten-fortschritt").value = "";
                 document.getElementById("bearbeiten-katalog").value = "";
                 document.getElementById("bearbeiten-antworten").value = "";
+                document.getElementById("bearbeiten-tipp").value = "";
                 errorMsg.innerText = "";
                 document.getElementById("admin-bearbeiten-bereich").style.display = "none";
                 document.getElementById("admin-bereich").style.display = "block";
                 ladeAlleSpieler();
+
+                bearbeitenSaveBtn.disabled = false;
+                bearbeitenSaveBtn.innerText = "Speichern";
             } else {
                 errorMsg.innerText = "Spielername nicht gefunden.";
                 return;
@@ -280,6 +287,8 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
         } catch (error) {
             console.error(error);
             errorMsg.innerText = "Fehler beim Speichern der Daten.";
+            bearbeitenSaveBtn.disabled = false;
+            bearbeitenSaveBtn.innerText = "Speichern";
         }
     }
 });
@@ -297,18 +306,26 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
     const nachrichtInput = document.getElementById("admin-nachricht").value.trim();
     const errorMsg = document.getElementById("nachrichten-error-msg");
 
-    try {
-        fb.setzeAdminNachricht(nachrichtInput);
+    const nachrichtSaveBtn = document.getElementById("nachricht-save-btn");
+    nachrichtSaveBtn.disabled = true;
+    nachrichtSaveBtn.innerText = "Bitte warten";
 
+    try {
+        await fb.setzeAdminNachricht(nachrichtInput);
+
+        errorMsg.innerText = "";
+        document.getElementById("admin-nachricht-bereich").style.display = "none";
+        document.getElementById("admin-bereich").style.display = "block";
+        ladeAlleSpieler();
+
+        nachrichtSaveBtn.disabled = false;
+        nachrichtSaveBtn.innerText = "Speichern";
     } catch (error) {
         console.error(error);
         errorMsg.innerText = "Fehler beim Speichern der Daten.";
+        nachrichtSaveBtn.disabled = false;
+        nachrichtSaveBtn.innerText = "Speichern";
     }
-
-    errorMsg.innerText = "";
-    document.getElementById("admin-nachricht-bereich").style.display = "none";
-    document.getElementById("admin-bereich").style.display = "block";
-    ladeAlleSpieler();
 });
 
 
@@ -326,24 +343,46 @@ document.getElementById("fragen-abort-btn").addEventListener("click", () => {
     document.getElementById("fragen-nummer-laden").value = 0;
 });
 
-document.getElementById("fragen-laden-btn").addEventListener("click", () => {
-    const index = document.getElementById("fragen-nummer-laden").value;
+document.getElementById("fragen-laden-btn").addEventListener("click", async () => {
+    const index = document.getElementById("fragen-nummer-laden").value -1;
     const katalog = document.getElementById("fragen-katalog-laden").value;
+    const errorMsg = document.getElementById("fragen-error-msg");
 
-    fragenLaden(katalog);
+    const fragenLadenBtn = document.getElementById("fragen-laden-btn");
+    fragenLadenBtn.disabled = true;
+    fragenLadenBtn.innerText = "Bitte warten...";
 
-    if (index >= alleFragen.length) return;
+    try {
+        await fragenLaden(katalog);
 
-    document.getElementById("fragen-frage").value = alleFragen[index].frage;
-    document.getElementById("fragen-antwort").value = alleFragen[index].antwort;
-    document.getElementById("fragen-nummer").value = index;
-    document.getElementById("fragen-katalog").value = katalog;
+        if (index >= alleFragen.length) {
+            errorMsg.innerText = "Diese Stations-Nummer existiert in diesem Katalog nicht.";
+            
+            document.getElementById("fragen-frage").value = "";
+            document.getElementById("fragen-antwort").value = "";
+            document.getElementById("fragen-nummer").value = "";
+            document.getElementById("fragen-katalog").value = "";
+            return;
+        }
+
+        document.getElementById("fragen-frage").value = alleFragen[index].frage;
+        document.getElementById("fragen-antwort").value = alleFragen[index].antwort;
+        document.getElementById("fragen-nummer").value = index +1;
+        document.getElementById("fragen-katalog").value = katalog;
+        errorMsg.innerText = "";
+    } catch (error) {
+        console.error(error);
+        errorMsg.innerText = "Fehler beim Laden der Fragen aus der Datenbank.";
+    } finally {
+        fragenLadenBtn.disabled = false;
+        fragenLadenBtn.innerText = "Laden";
+    }
 });
 
 document.getElementById("fragen-save-btn").addEventListener("click", async () => {
     const frageInput = document.getElementById("fragen-frage").value;
     const antwortInput = document.getElementById("fragen-antwort").value;
-    const indexInput = document.getElementById("fragen-nummer").value;
+    const indexInput = document.getElementById("fragen-nummer").value -1;
     const katalogInput = document.getElementById("fragen-katalog").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
@@ -351,6 +390,10 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
         errorMsg.innerText = "Bitte Frage, Antwort und Index angeben!";
         return;
     }
+
+    const fragenSaveBtn = document.getElementById("fragen-save-btn");
+    fragenSaveBtn.disabled = true;
+    fragenSaveBtn.innerText = "Bitte warten...";
 
     const neueFrage = {
         frage: frageInput,
@@ -372,7 +415,12 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
     } catch (error) {
         console.error("Daten werden nicht geladen:", error);
         errorMsg.innerText = "Fehler beim speichern der Daten.";
-    } 
+    } finally {
+        if (fragenSaveBtn) {
+            fragenSaveBtn.disabled = false;
+            fragenSaveBtn.innerText = "Speichern";
+        }
+    }
     
 });
 
@@ -385,6 +433,10 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
         errorMsg.innerText = "Bitte Index zum löschen angeben!";
         return;
     }
+
+    const fragenDeleteBtn = document.getElementById("fragen-delete-btn");
+    fragenDeleteBtn.disabled = true;
+    fragenDeleteBtn.innerText = "Bitte warten";
 
     const entscheidung = confirm(`Möchten Sie die Frage ${indexInput} wirklich löschen?`);
     if (!entscheidung) return;
@@ -405,7 +457,12 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
     } catch (error) {
         console.error("Daten werden nicht gelöscht:", error);
         errorMsg.innerText = "Fehler beim löschen der Daten.";
-    } 
+    } finally {
+        if (fragenDeleteBtn) {
+            fragenDeleteBtn.disabled = true;
+            fragenDeleteBtn.innerText = "Bitte warten";
+        }
+    }
 });
 
 async function fragenLaden(katalog) {
@@ -420,3 +477,16 @@ async function fragenLaden(katalog) {
         console.error("Fehler beim Laden der Fragen:", error);
     }
 }
+
+
+// ---------------------------------------------
+// --- LOGOUT BUTTON ---
+// ---------------------------------------------
+document.getElementById("logout-btn").addEventListener("click", async () => {
+    try {
+        await fb.auth.signOut();
+        window.location.href = "index.html";
+    } catch (error) {
+        console.error("Fehler beim Logout:", error);
+    }
+});

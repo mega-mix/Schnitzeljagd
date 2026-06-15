@@ -22,6 +22,8 @@ fb.onAuthChanged(async (user) => {
             document.getElementById("spiel-bereich").style.display = "block";
             document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
 
+            await fragenLaden(spielerInfo.katalog);
+
             zeigeFrage();
         }
     } else {
@@ -32,35 +34,11 @@ fb.onAuthChanged(async (user) => {
 
 
 // ---------------------------------------------
-// --- EINMALIGE EVENT-LISTENER ---
-// ---------------------------------------------
-document.getElementById("spiel-tipp-btn").addEventListener("click", async () => {
-    const spielTipp = document.getElementById("spiel-tipp");
-
-    if (spielerInfo.fortschritt >= alleFragen.length) return;
-
-    spielerInfo.tipps = (spielerInfo.tipps || 0) + 1;
-    
-    spielTipp.innerText = alleFragen[spielerInfo.fortschritt].tipp1 || "Kein Tipp verfügbar.";
-
-    try {
-        await fb.updateDocument("spieler", spielerUid, {
-            tipps: spielerInfo.tipps,
-        });
-    } catch (error) {
-        console.error(error);
-        if (feedback) feedback.innerText = "Fehler beim Speichern der Tipps.";
-    }
-});
-
-
-// ---------------------------------------------
 // --- SPIEL LOGIK ---
 // ---------------------------------------------
 async function zeigeFrage() {
     spielStatus = await fb.getDocument("spielStatus", "global");
     spielerInfo = await fb.getDocument("spieler", spielerUid);
-    await fragenLaden(spielerInfo.katalog);
 
     const container = document.getElementById("spiel-frage");
     const spielTipp = document.getElementById("spiel-tipp");
@@ -87,6 +65,7 @@ async function zeigeFrage() {
     else if (spielerInfo.fortschritt < alleFragen.length) {
         if (spielStatus.tipps) {
             document.getElementById("spiel-tipp-container").style.display = "block";
+            document.getElementById("spiel-tipp-btn").disabled = false;
         } else {
             document.getElementById("spiel-tipp-container").style.display = "none";
         }
@@ -121,12 +100,14 @@ async function pruefeAntwort() {
     spielerInfo.antworten = (spielerInfo.antworten || 0) + 1;
 
     if (istRichtig) {
-        // Button sperren, um Doppelklicks während des Uploads abzufangen
-        if (antwortBtn) antwortBtn.disabled = true;
+        if (antwortBtn) {
+            antwortBtn.disabled = true;
+            antwortBtn.innerText ="Bitte warten...";
+        }
 
         spielerInfo.fortschritt++;
         try {
-            await fb.updateDocument("spieler", fb.aktuelleUid, {
+            await fb.updateDocument("spieler", spielerUid, {
                 fortschritt: spielerInfo.fortschritt,
                 antworten: spielerInfo.antworten,
                 zeitstempel: Date.now()
@@ -141,17 +122,31 @@ async function pruefeAntwort() {
         feedback.style.color = "red";
         feedback.innerText = "Falsche Antwort! Versucht es noch einmal.";
 
+        // Animation Text
+        feedback.classList.remove("shake-blink");
+        void feedback.offsetWidth;
+        feedback.classList.add("shake-blink");
+
+        if (antwortBtn) {
+            antwortBtn.classList.remove("btn-error-flash");
+            void antwortBtn.offsetWidth;
+            antwortBtn.classList.add("btn-error-flash");
+        }
+
         if (antwortBtn) antwortBtn.disabled = true;
 
         try {
-            await fb.updateDocument("spieler", fb.aktuelleUid, {
+            await fb.updateDocument("spieler", spielerUid, {
                 antworten: spielerInfo.antworten
             });
         } catch (error) {
             console.error(error);
             feedback.innerText = "Fehler beim Speichern des Fortschritts.";
         } finally {
-            if (antwortBtn) antwortBtn.disabled = false;
+            if (antwortBtn) {
+                antwortBtn.disabled = false;
+                antwortBtn.innerText = "Antwort senden";
+            }
         }
     }
 }
@@ -168,3 +163,43 @@ async function fragenLaden(katalog) {
         console.error("Fehler beim Laden der Fragen:", error);
     }
 }
+
+
+// ---------------------------------------------
+// --- TIPP BUTTON ---
+// ---------------------------------------------
+document.getElementById("spiel-tipp-btn").addEventListener("click", async () => {
+    const spielTipp = document.getElementById("spiel-tipp");
+
+    if (!spielerInfo || alleFragen.length === 0) return; 
+    if (spielerInfo.fortschritt === undefined || spielerInfo.fortschritt >= alleFragen.length) return;
+
+    const tippBtn = document.getElementById("spiel-tipp-btn");
+    tippBtn.disabled = true;
+
+    spielerInfo.tipps = (spielerInfo.tipps || 0) + 1;
+    
+    spielTipp.innerText = alleFragen[spielerInfo.fortschritt].tipp1 || "Kein Tipp verfügbar.";
+
+    try {
+        await fb.updateDocument("spieler", spielerUid, {
+            tipps: spielerInfo.tipps,
+        });
+    } catch (error) {
+        console.error(error);
+        if (spielTipp) spielTipp.innerText = "Fehler beim Speichern der Tipps.";
+    }
+});
+
+
+// ---------------------------------------------
+// --- LOGOUT BUTTON ---
+// ---------------------------------------------
+document.getElementById("logout-btn").addEventListener("click", async () => {
+    try {
+        await fb.auth.signOut();
+        window.location.href = "index.html";
+    } catch (error) {
+        console.error("Fehler beim Logout:", error);
+    }
+});

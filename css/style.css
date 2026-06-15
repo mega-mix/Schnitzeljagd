@@ -79,6 +79,24 @@
         margin-left: 12px;
     }
 
+    #logout-btn {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 0 0 12px !important;
+        width: auto !important;
+        height: auto !important;
+        color: white !important;
+        font-size: 16px;
+        font-weight: normal;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    #logout-btn:hover {
+        background: none !important;
+    }
+
     #login-bereich, #admin-spieler-bereich, #start-bereich, #spiel-bereich, #admin-bereich, #create-bereich, #admin-bearbeiten-bereich, #admin-nachricht-bereich, #admin-fragen-bereich {
         background-color: var(--card-color);
         margin-top: 40px;
@@ -176,6 +194,19 @@
         background-color: var(--primary-hover);
     }
 
+    button:disabled {
+        background-color: #A0AEC0 !important;
+        color: #E2E8F0 !important;
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+    }
+
+    button:disabled:hover, button:disabled:active {
+        background-color: #A0AEC0 !important;
+        opacity: 0.6 !important;
+    }
+
     #fragen-error-msg, #nachrichten-error-msg, #bearbeiten-error-msg, #login-error-msg, #create-error-msg, #spiel-feedback {
         margin-top: 12px;
         font-size: 14px;
@@ -188,4 +219,26 @@
         line-height: 1.5;
         color: var(--text-main);
         margin-bottom: 20px;
+    }
+
+    .shake-blink {
+        animation: shakeBlink 0.4s ease-in-out;
+    }
+
+    @keyframes shakeBlink {
+        0% { transform: translateX(0); opacity: 1; }
+        25% { transform: translateX(-6px); color: #c0392b; }
+        50% { transform: translateX(6px); }
+        75% { transform: translateX(-4px); }
+        100% { transform: translateX(0); opacity: 1; }
+    }
+
+    .btn-error-flash {
+        animation: errorFlash 0.5s ease-in-out;
+    }
+
+    @keyframes errorFlash {
+        0% { background-color: var(--primary-color); }
+        30% { background-color: var(--error-color); } /* Blitzt rot auf */
+        100% { background-color: var(--primary-color); } /* Kehrt zur Standardfarbe zurück */
     }

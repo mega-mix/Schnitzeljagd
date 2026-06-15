@@ -10,7 +10,7 @@
     <div id="top-bar">
         <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
         <div id="top-links">
-            <a id="top-link" href="index.html">Logout</a>
+            <button id="logout-btn">Logout</button>
             <a id="top-link" href="start.html">Startseite</a>
         </div>
     </div>
@@ -63,9 +63,10 @@
 
     <div id="admin-bearbeiten-bereich" style="display: none;">
         <input type="text" id="bearbeiten-name" placeholder="Spielername">
-        <input type="number" min="1" id="bearbeiten-fortschritt" placeholder="Station Nummer...">
-        <input type="number" min="1" id="bearbeiten-katalog" placeholder="Katalog Nummer...">
-        <input type="number" min="0" id="bearbeiten-antworten" placeholder="Antworten..."><br><br>
+        <input type="number" min="1" id="bearbeiten-fortschritt" inputmode="numeric" placeholder="Station Nummer...">
+        <input type="number" min="1" id="bearbeiten-katalog" inputmode="numeric" placeholder="Katalog Nummer...">
+        <input type="number" min="0" id="bearbeiten-antworten" inputmode="numeric" placeholder="Antworten...">
+        <input type="number" min="0" id="bearbeiten-tipp" inputmode="numeric" placeholder="Tipps..."><br><br>
         <button id="bearbeiten-save-btn">Speichern</button>
         <button id="bearbeiten-delete-btn">Daten Löschen</button>
         <button id="bearbeiten-abort-btn">Abbrechen</button>
@@ -80,13 +81,13 @@
     </div>
 
     <div id="admin-fragen-bereich" style="display: none;">
-        <input type="number" min="0" id="fragen-nummer-laden" value="0">
-        <input type="number" min="1" id="fragen-katalog-laden" value="1">
+        <input type="number" min="1" id="fragen-nummer-laden" inputmode="numeric" placeholder="Station Nummer...">
+        <input type="number" min="1" id="fragen-katalog-laden" inputmode="numeric" placeholder="Katalog Nummer...">
         <button id="fragen-laden-btn">Laden</button>
         <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
         <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
-        <input type="number" min="0" id="fragen-nummer" placeholder="Index...">
-        <input type="number" min="1" id="fragen-katalog" placeholder="Katalog..."><br><br>
+        <input type="number" min="1" id="fragen-nummer" inputmode="numeric" placeholder="Station...">
+        <input type="number" min="1" id="fragen-katalog" inputmode="numeric" placeholder="Katalog..."><br><br>
         <button id="fragen-save-btn">Speichern</button>
         <button id="fragen-delete-btn">Löschen</button>
         <button id="fragen-abort-btn">Abbrechen</button>
