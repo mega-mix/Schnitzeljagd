@@ -21,11 +21,6 @@ fb.onAuthChanged(async (user) => {
         if (spielerInfo) {
             spielStatus = await fb.getDocument("spielStatus", "global");
 
-            if (spielerInfo.spielerName === "admin") {
-                document.getElementById("start-admin-btn").style.display = "block";
-            }
-
-            document.getElementById("start-bereich").style.display = "block";
             document.getElementById("start-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
 
             document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
@@ -34,6 +29,12 @@ fb.onAuthChanged(async (user) => {
             } else {
                 document.getElementById("admin-nachricht-display").style.display = "none";
             }
+
+            if (spielerInfo.spielerName === "admin") {
+                document.getElementById("start-admin-btn").style.display = "block";
+            }
+
+            document.getElementById("start-bereich").style.display = "block";
         }
     } else {
         // Nicht eingeloggt? Rauswurf zurück zur Loginseite!
