@@ -1,8 +1,9 @@
-import { FirebaseService } from "./classes/FirebaseService.js";
+import { FirebaseService, APP_VERSION } from "./classes/FirebaseService.js";
+
 
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.1";
+document.getElementById("version").innerText = APP_VERSION;
 
 // ---------------------------------------------
 // --- LOGIN LOGIK ---
@@ -35,7 +36,7 @@ async function login() {
 
     // Login
     try {
-        await fb.loginGruppe(nameInput, passInput);
+        await fb.loginSpieler(nameInput, passInput);
 
         window.location.href = "start.html";
         
@@ -65,6 +66,7 @@ document.getElementById("create-abort-btn").addEventListener("click", async () =
 });
 
 document.getElementById("create-btn").addEventListener("click", async () => {
+    const erlaubteZeichen = /^[a-zA-Z0-9äöüÄÖÜß\-_]+$/;
     const nameInput = document.getElementById("create-name").value.trim();
     const passInput = document.getElementById("create-passwort").value;
     const passInputWdh = document.getElementById("create-passwort-wdh").value;
@@ -73,6 +75,12 @@ document.getElementById("create-btn").addEventListener("click", async () => {
     // Leere Felder prüfen
     if (!nameInput || !passInput || !passInputWdh) {
         errorMsg.innerText = "Bitte alles ausfüllen.";
+        return;
+    }
+
+    // Sonderzeichen prüfen
+    if (!erlaubteZeichen.test(nameInput)) {
+        errorMsg.innerText = "Sonderzeichen (außer - und _) sind im Namen nicht erlaubt!";
         return;
     }
 
@@ -87,7 +95,7 @@ document.getElementById("create-btn").addEventListener("click", async () => {
     }
 
     try {
-        await fb.registriereGruppe(nameInput, passInput);
+        await fb.registriereSpieler(nameInput, passInput);
         
         document.getElementById("login-name").value = nameInput;
         document.getElementById("create-name").value = "";
@@ -100,7 +108,7 @@ document.getElementById("create-btn").addEventListener("click", async () => {
     } catch (error) {
         console.error(error);
         if (error.code === "auth/email-already-in-use") {
-            errorMsg.innerText = "Dieser Gruppenname ist schon vergeben.";
+            errorMsg.innerText = "Dieser Spielername ist schon vergeben.";
         } else {
             errorMsg.innerText = "Fehler bei der Registrierung.";
         }

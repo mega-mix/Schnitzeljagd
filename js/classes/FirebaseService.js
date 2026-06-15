@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/fireba
 import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
+export const APP_VERSION ="v1.4.2";
 
 export class FirebaseService {
     constructor() {
@@ -27,27 +28,32 @@ export class FirebaseService {
     }
 
     /**
-     * Helfer-Methode, um aus einem Gruppennamen eine interne Fake-E-Mail zu bauen
+     * Helfer-Methode, um aus einem Spielernamen eine interne Fake-E-Mail zu bauen
      */
     _baueFakeEmail(name) {
         return `${name.trim().toLowerCase()}@schnitzeljagd.intern`;
     }
 
     /**
-     * Registriert eine neue Gruppe im Auth-System UND legt sofort 
+     * Registriert einen neuen Spieler im Auth-System UND legt sofort 
      * das passende Fortschritts-Dokument in Firestore an (ID = UID).
      */
-    async registriereGruppe(gruppenName, passwort) {
-        const fakeEmail = this._baueFakeEmail(gruppenName);
+    async registriereSpieler(spielerName, passwort) {
+        const saubererName = spielerName.trim().replace(/[^a-zA-Z0-9 äöüÄÖÜß\-_]/g, "");
+        const emailName = saubererName
+            .toLowerCase()
+            .replace(/ä/gi, "ae").replace(/ö/gi, "oe").replace(/ü/gi, "ue").replace(/ß/gi, "ss")
+
+        const fakeEmail = this._baueFakeEmail(emailName);
         
         // 1. Im Auth-System registrieren
         const userCredential = await createUserWithEmailAndPassword(this.auth, fakeEmail, passwort);
         const uid = userCredential.user.uid;
 
         // 2. Direkt das geschützte Dokument in Firestore anlegen
-        const docRef = doc(this.db, "gruppen", uid);
+        const docRef = doc(this.db, "spieler", uid);
         await setDoc(docRef, {
-            gruppenName: gruppenName.trim(),
+            spielerName: saubererName.trim(),
             fortschritt: 0,
             katalog: 1,
             tipps: 0,
@@ -58,12 +64,17 @@ export class FirebaseService {
     }
 
     /**
-     * Loggt eine Gruppe ein und gibt deren UID zurück
+     * Loggt einen Spieler ein und gibt deren UID zurück
      */
-    async loginGruppe(gruppenName, passwort) {
-        const fakeEmail = this._baueFakeEmail(gruppenName);
+    async loginSpieler(spielerName, passwort) {
+        const saubererName = spielerName.trim().replace(/[^a-zA-Z0-9 äöüÄÖÜß\-_]/g, "");
+        const emailName = saubererName
+            .toLowerCase()
+            .replace(/ä/gi, "ae").replace(/ö/gi, "oe").replace(/ü/gi, "ue").replace(/ß/gi, "ss")
+
+        const fakeEmail = this._baueFakeEmail(emailName);
         const userCredential = await signInWithEmailAndPassword(this.auth, fakeEmail, passwort);
-        await this.updateDocument("gruppen", userCredential.user.uid, { lastLogin: Date.now() });
+        await this.updateDocument("spieler", userCredential.user.uid, { lastLogin: Date.now() });
         return userCredential.user.uid;
     }
 
@@ -76,8 +87,8 @@ export class FirebaseService {
 
     /**
      * Holt ein einzelnes Dokument aus einer Collection anhand der ID
-     * @param {string} collectionName - Name der Collection (z.B. "gruppen")
-     * @param {string} docId - ID des Dokuments (z.B. Gruppenname)
+     * @param {string} collectionName - Name der Collection (z.B. "spieler")
+     * @param {string} docId - ID des Dokuments (z.B. Spielername)
      * @returns {Object|null} Die Daten des Dokuments oder null, wenn es nicht existiert
      */
     async getDocument(collectionName, docId) {
@@ -120,8 +131,8 @@ export class FirebaseService {
 
     /**
      * Löscht ein bestimmtes Dokument aus einer Collection
-     * @param {string} collectionName - Name der Collection (z.B. "gruppen")
-     * @param {string} docId - ID des zu löschenden Dokuments (z.B. Gruppenname)
+     * @param {string} collectionName - Name der Collection (z.B. "spieler")
+     * @param {string} docId - ID des zu löschenden Dokuments (z.B. Spielername)
      */
     async deleteDocument(collectionName, docId) {
         const docRef = doc(this.db, collectionName, docId);
@@ -130,8 +141,8 @@ export class FirebaseService {
 
     /**
      * Erstellt ein neues Dokument in einer Collection
-     * @param {string} collectionName - Name der Collection (z.B. "gruppen")
-     * @param {string} docId - ID des zu erstellenden Dokuments (z.B. Gruppenname)
+     * @param {string} collectionName - Name der Collection (z.B. "spieler")
+     * @param {string} docId - ID des zu erstellenden Dokuments (z.B. Spielername)
      * @param {string} daten - Daten für das neue Dokument
      */
     async createDocument(collectionName, docId, daten) {

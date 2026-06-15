@@ -1,10 +1,9 @@
-import { FirebaseService } from "./classes/FirebaseService.js";
+import { FirebaseService, APP_VERSION } from "./classes/FirebaseService.js";
 
 
-// Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.1";
+document.getElementById("version").innerText = APP_VERSION;
 
 let alleFragen = [];
 let spielStatus = {};
@@ -18,16 +17,16 @@ let spielerUid = "";
 fb.onAuthChanged(async (user) => {
     if (user) {
         spielerUid = user.uid;
-        spielerInfo = await fb.getDocument("gruppen", spielerUid);
+        spielerInfo = await fb.getDocument("spieler", spielerUid);
         if (spielerInfo) {
             spielStatus = await fb.getDocument("spielStatus", "global");
 
-            if (spielerInfo.gruppenName === "admin") {
+            if (spielerInfo.spielerName === "admin") {
                 document.getElementById("start-admin-btn").style.display = "block";
             }
 
             document.getElementById("start-bereich").style.display = "block";
-            document.getElementById("start-begruessung").innerText = `Hallo ${spielerInfo.gruppenName}`;
+            document.getElementById("start-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
 
             document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
             if (spielStatus.adminNachricht !== "") {
