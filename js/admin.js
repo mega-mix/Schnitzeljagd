@@ -425,7 +425,7 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
 });
 
 document.getElementById("fragen-delete-btn").addEventListener("click", async () => {
-    const indexInput = document.getElementById("fragen-nummer").value;
+    const indexInput = document.getElementById("fragen-nummer").value -1;
     const katalogInput = document.getElementById("fragen-katalog").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
@@ -459,7 +459,7 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
         errorMsg.innerText = "Fehler beim löschen der Daten.";
     } finally {
         if (fragenDeleteBtn) {
-            fragenDeleteBtn.disabled = true;
+            fragenDeleteBtn.disabled = false;
             fragenDeleteBtn.innerText = "Bitte warten";
         }
     }
