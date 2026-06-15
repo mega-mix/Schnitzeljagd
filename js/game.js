@@ -1,10 +1,9 @@
-import { FirebaseService } from "./classes/FirebaseService.js";
+import { FirebaseService, APP_VERSION } from "./classes/FirebaseService.js";
 
 
-// Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.1";
+document.getElementById("version").innerText = APP_VERSION;
 
 let alleFragen = [];
 let spielStatus = {};
@@ -18,10 +17,10 @@ let spielerUid = "";
 fb.onAuthChanged(async (user) => {
     if (user) {
         spielerUid = user.uid;
-        spielerInfo = await fb.getDocument("gruppen", spielerUid);
+        spielerInfo = await fb.getDocument("spieler", spielerUid);
         if (spielerInfo) {
             document.getElementById("spiel-bereich").style.display = "block";
-            document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.gruppenName}`;
+            document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
 
             zeigeFrage();
         }
@@ -45,7 +44,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     spielTipp.innerText = alleFragen[spielerInfo.fortschritt].tipp1 || "Kein Tipp verfügbar.";
 
     try {
-        await fb.updateDocument("gruppen", spielerUid, {
+        await fb.updateDocument("spieler", spielerUid, {
             tipps: spielerInfo.tipps,
         });
     } catch (error) {
@@ -60,7 +59,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
 // ---------------------------------------------
 async function zeigeFrage() {
     spielStatus = await fb.getDocument("spielStatus", "global");
-    spielerInfo = await fb.getDocument("gruppen", spielerUid);
+    spielerInfo = await fb.getDocument("spieler", spielerUid);
     await fragenLaden(spielerInfo.katalog);
 
     const container = document.getElementById("spiel-frage");
@@ -79,7 +78,7 @@ async function zeigeFrage() {
         container.innerHTML = `
             <p>Station ${spielerInfo.fortschritt +1}</p>
             <h3>Das Spiel ist aktuell pausiert.</h3>
-            <p>Bitte warte auf die Freigabe von Björn.</p>
+            <p>Bitte warte auf die Freigabe.</p>
             <button id="status-btn">Aktualisieren</button>
         `;
         document.getElementById("status-btn").addEventListener("click", () => location.reload());
@@ -92,26 +91,17 @@ async function zeigeFrage() {
             document.getElementById("spiel-tipp-container").style.display = "none";
         }
 
-        // Sonderform für Holland!
-        if (spielerInfo.fortschritt < 14) {
-            container.innerHTML = `
-                <p>Station ${spielerInfo.fortschritt +1}</p>
-                <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
-                <textarea id="antwort-input" placeholder="Eure Antwort"></textarea>
-                <button id="antwort-btn">Antwort senden</button>
-                <p id="spiel-feedback" style="color:red;"></p>
-            `;
-            document.getElementById("antwort-btn").addEventListener("click", pruefeAntwort);
-        } else {
-            container.innerHTML = `
-                <p>Station ${spielerInfo.fortschritt +1}</p>
-                <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
-                <p id="spiel-feedback" style="color:red;"></p>
-            `;
-        }
+        container.innerHTML = `
+            <p>Station ${spielerInfo.fortschritt +1}</p>
+            <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
+            <textarea id="antwort-input" placeholder="Eure Antwort"></textarea>
+            <button id="antwort-btn">Antwort senden</button>
+            <p id="spiel-feedback" style="color:red;"></p>
+        `;
+        document.getElementById("antwort-btn").addEventListener("click", pruefeAntwort);
     }
     else {
-        container.innerHTML = `<h3>Glückwunsch! Ihr habt die Suche erfolgreich gemeistert! 🎉</h3>`;
+        container.innerHTML = `<h3>Glückwunsch! Die Suche wurde erfolgreich gemeistert! 🎉</h3>`;
         document.getElementById("spiel-tipp-container").style.display = "none";
     }
 }
@@ -136,7 +126,7 @@ async function pruefeAntwort() {
 
         spielerInfo.fortschritt++;
         try {
-            await fb.updateDocument("gruppen", fb.aktuelleUid, {
+            await fb.updateDocument("spieler", fb.aktuelleUid, {
                 fortschritt: spielerInfo.fortschritt,
                 antworten: spielerInfo.antworten,
                 zeitstempel: Date.now()
@@ -154,7 +144,7 @@ async function pruefeAntwort() {
         if (antwortBtn) antwortBtn.disabled = true;
 
         try {
-            await fb.updateDocument("gruppen", fb.aktuelleUid, {
+            await fb.updateDocument("spieler", fb.aktuelleUid, {
                 antworten: spielerInfo.antworten
             });
         } catch (error) {

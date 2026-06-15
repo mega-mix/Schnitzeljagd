@@ -20,19 +20,21 @@
     </div>
 
     <div id="login-bereich">
-        <h2>Gruppe anmelden</h2>
-        <input type="text" id="login-name" placeholder="Gruppenname">
+        <h2>Anmelden</h2>
+        <input type="text" id="login-name" placeholder="Spielername">
         <input type="password" id="login-passwort" placeholder="Passwort"><br><br>
         <button id="login-btn">Starten</button>
-        <button id="goto-create-btn">Gruppe erstellen</button>
+        <button id="goto-create-btn">Spieler erstellen</button>
         <p id="login-error-msg" style="color:red;"></p>
     </div>
 
     <div id="create-bereich" style="display:none;">
-        <h2>Gruppe erstellen</h2>
-        <input type="text" id="create-name" placeholder="Gruppenname">
+        <h2>Spieler erstellen</h2>
+        <input type="text" id="create-name" placeholder="Spielername">
         <input type="password" id="create-passwort" placeholder="Passwort">
-        <input type="password" id="create-passwort-wdh" placeholder="Passwort wiederholen"><br><br>
+        <input type="password" id="create-passwort-wdh" placeholder="Passwort wiederholen">
+        <p>Im Namen erlaubt: a-z, A-Z, 0-9, Umlaute, -, _</p>
+        <p>Passwort muss mindestens 6 Zeichen beinhalten.</p><br><br>
         <button id="create-btn">Erstellen</button>
         <button id="create-abort-btn">Abbrechen</button>
         <p id="create-error-msg" style="color:red;"></p>

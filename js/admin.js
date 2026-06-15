@@ -1,10 +1,9 @@
-import { FirebaseService } from "./classes/FirebaseService.js";
+import { FirebaseService, APP_VERSION } from "./classes/FirebaseService.js";
 
 
-// Instanzen der Services erstellen
 const fb = new FirebaseService();
 
-document.getElementById("version").innerText = "v 1.4.1";
+document.getElementById("version").innerText = APP_VERSION;
 
 let alleFragen = [];
 let spielStatus = {};
@@ -18,11 +17,11 @@ let spielerUid = "";
 fb.onAuthChanged(async (user) => {
     if (user) {
         spielerUid = user.uid;
-        spielerInfo = await fb.getDocument("gruppen", spielerUid);
+        spielerInfo = await fb.getDocument("spieler", spielerUid);
         if (spielerInfo) {
-            if (spielerInfo.gruppenName === "admin") {
+            if (spielerInfo.spielerName === "admin") {
                 document.getElementById("admin-bereich").style.display = "block";
-                ladeAlleGruppen();
+                ladeAlleSpieler();
             }
         }
     } else {
@@ -35,7 +34,7 @@ fb.onAuthChanged(async (user) => {
 // ---------------------------------------------
 // --- ADMIN LOGIK ---
 // ---------------------------------------------
-async function ladeAlleGruppen() {
+async function ladeAlleSpieler() {
     spielStatus = await fb.getDocument("spielStatus", "global");
 
     const tabelleBody = document.getElementById("admin-tabelle-body");
@@ -83,16 +82,16 @@ async function ladeAlleGruppen() {
     }
 
     try {
-        const alleGruppen = await fb.getAllDocuments("gruppen");
+        const alleSpieler = await fb.getAllDocuments("spieler");
         let htmlInhalt = "";
 
-        alleGruppen.forEach((gruppe) => {
-            if (gruppe.gruppenName && gruppe.gruppenName.toLowerCase() !== "admin") {
+        alleSpieler.forEach((spieler) => {
+            if (spieler.spielerName && spieler.spielerName.toLowerCase() !== "admin") {
                 let uhrzeit = "--.--., --:--:--"
-                const fortschritt = gruppe.fortschritt !== undefined ? gruppe.fortschritt : 0;
+                const fortschritt = spieler.fortschritt !== undefined ? spieler.fortschritt : 0;
 
-                if (gruppe.zeitstempel) {
-                    uhrzeit = new Date(gruppe.zeitstempel).toLocaleTimeString("de-DE", {
+                if (spieler.zeitstempel) {
+                    uhrzeit = new Date(spieler.zeitstempel).toLocaleTimeString("de-DE", {
                         day: "2-digit",
                         month: "2-digit",
                         year: "2-digit",
@@ -104,25 +103,25 @@ async function ladeAlleGruppen() {
                 
                 htmlInhalt += `
                     <tr>
-                        <td style="padding: 8px;">${gruppe.gruppenName}</td>
-                        <td style="padding: 8px;">${gruppe.katalog}</td>
+                        <td style="padding: 8px;">${spieler.spielerName}</td>
+                        <td style="padding: 8px;">${spieler.katalog}</td>
                         <td style="padding: 8px;">${fortschritt + 1}</td>
-                        <td style="padding: 8px;">${gruppe.tipps}</td>
-                        <td style="padding: 8px;">${gruppe.antworten}</td>
+                        <td style="padding: 8px;">${spieler.tipps}</td>
+                        <td style="padding: 8px;">${spieler.antworten}</td>
                         <td style="padding: 8px;">${uhrzeit}</td>
                     </tr>
                 `;
             }
         });
 
-        tabelleBody.innerHTML = htmlInhalt || "<tr><td colspan='2' style='padding:8px;'>Keine Gruppen gefunden.</td></tr>";
+        tabelleBody.innerHTML = htmlInhalt || "<tr><td colspan='2' style='padding:8px;'>Kein Spieler gefunden.</td></tr>";
     } catch (error) {
         console.error(error);
-        tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px; color:red;'>Fehler beim Abrufen der Gruppen.</td></tr>";
+        tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px; color:red;'>Fehler beim Abrufen der Spieler.</td></tr>";
     }
 }
 
-document.getElementById("admin-refresh-btn").addEventListener("click", ladeAlleGruppen);
+document.getElementById("admin-refresh-btn").addEventListener("click", ladeAlleSpieler);
 
 document.getElementById("admin-bearbeiten-btn").addEventListener("click", () => {
     document.getElementById("admin-bereich").style.display = "none";
@@ -142,12 +141,12 @@ document.getElementById("admin-nachricht-btn").addEventListener("click", async (
 
 document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
     await fb.setzeSpielStatus(!spielStatus.freigegeben);
-    ladeAlleGruppen();
+    ladeAlleSpieler();
 });
 
 document.getElementById("admin-tipp-btn").addEventListener("click", async () => {
     await fb.setzeTippStatus(!spielStatus.tipps);
-    ladeAlleGruppen();
+    ladeAlleSpieler();
 });
 
 document.getElementById("admin-spieler-btn").addEventListener("click", () => {
@@ -157,7 +156,7 @@ document.getElementById("admin-spieler-btn").addEventListener("click", () => {
 
 
 // ---------------------------------------------
-// --- GRUPPE BEARBEITEN ---
+// --- SPIELER BEARBEITEN ---
 // ---------------------------------------------
 document.getElementById("spieler-abort-btn").addEventListener("click", () => {
     document.getElementById("admin-spieler-bereich").style.display = "none";
@@ -169,15 +168,15 @@ document.getElementById("admin-spieler-btn").addEventListener("click", async () 
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     try {
-        const alleGruppen = await fb.getAllDocuments("gruppen");
+        const alleSpieler = await fb.getAllDocuments("spieler");
         let htmlInhalt = "";
 
-        alleGruppen.forEach((gruppe) => {
-            if (gruppe.gruppenName) {
+        alleSpieler.forEach((spieler) => {
+            if (spieler.spielerName) {
                 let lastLogin = "--.--.--, --:--:--"
                 
-                if (gruppe.lastLogin) {
-                    lastLogin = new Date(gruppe.lastLogin).toLocaleTimeString("de-DE", {
+                if (spieler.lastLogin) {
+                    lastLogin = new Date(spieler.lastLogin).toLocaleTimeString("de-DE", {
                         day: "2-digit",
                         month: "2-digit",
                         year: "2-digit",
@@ -189,7 +188,7 @@ document.getElementById("admin-spieler-btn").addEventListener("click", async () 
                 
                 htmlInhalt += `
                     <tr>
-                        <td style="padding: 8px;">${gruppe.gruppenName}</td> 
+                        <td style="padding: 8px;">${spieler.spielerName}</td> 
                         <td style="padding: 8px;">${lastLogin}</td>
                     </tr>
                 `;
@@ -205,7 +204,7 @@ document.getElementById("admin-spieler-btn").addEventListener("click", async () 
 
 
 // ---------------------------------------------
-// --- GRUPPE BEARBEITEN ---
+// --- SPIELER BEARBEITEN ---
 // ---------------------------------------------
 document.getElementById("bearbeiten-abort-btn").addEventListener("click", () => {
     document.getElementById("bearbeiten-error-msg").innerText = "";
@@ -219,15 +218,15 @@ document.getElementById("bearbeiten-delete-btn").addEventListener("click", async
 
     try {
         // Alle Dokumente holen, um das mit dem richtigen Namen zu finden
-        const alleGruppen = await fb.getAllDocuments("gruppen");
-        const gefundeneGruppe = alleGruppen.find(g => g.gruppenName === nameInput);
+        const alleSpieler = await fb.getAllDocuments("spieler");
+        const gefundeneSpieler = alleSpieler.find(g => g.spielerName === nameInput);
 
-        if (gefundeneGruppe) {
-            // gefundeneGruppe.id enthält die korrekte UID für den Löschbefehl
-            await fb.deleteDocument("gruppen", gefundeneGruppe.id);
-            alert(`Gruppe ${nameInput} gelöscht.`);
+        if (gefundeneSpieler) {
+            // gefundeneSpieler.id enthält die korrekte UID für den Löschbefehl
+            await fb.deleteDocument("spieler", gefundeneSpieler.id);
+            alert(`Spieler ${nameInput} gelöscht.`);
         } else {
-            errorMsg.innerText = "Gruppenname nicht gefunden.";
+            errorMsg.innerText = "Spielername nicht gefunden.";
             return;
         }
     } catch (error) {
@@ -252,13 +251,13 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
         return;
     } else {
         try {
-            const alleGruppen = await fb.getAllDocuments("gruppen");
-            const gefundeneGruppe = alleGruppen.find(g => g.gruppenName === nameInput);
+            const alleSpieler = await fb.getAllDocuments("spieler");
+            const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
 
-            if (gefundeneGruppe) {
+            if (gefundeneSpieler) {
                 if (stationInput >= 1) {
-                    // Update über die UID (gefundeneGruppe.id) abschicken
-                    await fb.updateDocument("gruppen", gefundeneGruppe.id, {
+                    // Update über die UID (gefundeneSpieler.id) abschicken
+                    await fb.updateDocument("spieler", gefundeneSpieler.id, {
                         fortschritt: (stationInput -1),
                         katalog: katalogInput,
                         antworten: antwortenInput,
@@ -273,9 +272,9 @@ document.getElementById("bearbeiten-save-btn").addEventListener("click", async (
                 errorMsg.innerText = "";
                 document.getElementById("admin-bearbeiten-bereich").style.display = "none";
                 document.getElementById("admin-bereich").style.display = "block";
-                ladeAlleGruppen();
+                ladeAlleSpieler();
             } else {
-                errorMsg.innerText = "Gruppenname nicht gefunden.";
+                errorMsg.innerText = "Spielername nicht gefunden.";
                 return;
             }
         } catch (error) {
@@ -309,7 +308,7 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
     errorMsg.innerText = "";
     document.getElementById("admin-nachricht-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
-    ladeAlleGruppen();
+    ladeAlleSpieler();
 });
 
 
