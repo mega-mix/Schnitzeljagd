@@ -1,6 +1,5 @@
 import { FirebaseService, APP_VERSION } from "./classes/FirebaseService.js";
 
-
 const fb = new FirebaseService();
 
 document.getElementById("version").innerText = APP_VERSION;
@@ -10,7 +9,6 @@ let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
 
-
 // ---------------------------------------------
 // --- LOGIN ABWARTEN ---
 // ---------------------------------------------
@@ -19,71 +17,82 @@ fb.onAuthChanged(async (user) => {
         spielerUid = user.uid;
         spielerInfo = await fb.getDocument("spieler", spielerUid);
         if (spielerInfo) {
-            document.getElementById("spiel-bereich").style.display = "block";
-            document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
-
             await fragenLaden(spielerInfo.katalog);
-
-            zeigeFrage();
         }
+        
+        await zeigeFrage();
     } else {
-        // Nicht eingeloggt? Rauswurf zurück zur Loginseite!
         window.location.href = "index.html";
     }
 });
-
 
 // ---------------------------------------------
 // --- SPIEL LOGIK ---
 // ---------------------------------------------
 async function zeigeFrage() {
-    spielStatus = await fb.getDocument("spielStatus", "global");
-    spielerInfo = await fb.getDocument("spieler", spielerUid);
-
+    const spielBereich = document.getElementById("spiel-bereich");
     const container = document.getElementById("spiel-frage");
     const spielTipp = document.getElementById("spiel-tipp");
     const spielTippBtn = document.getElementById("spiel-tipp-btn");
 
-    document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
-    if (spielStatus.adminNachricht !== "") {
-        document.getElementById("admin-nachricht-display").style.display = "block";
-    } else {
-        document.getElementById("admin-nachricht-display").style.display = "none";
-    }
+    try {
+        spielStatus = await fb.getDocument("spielStatus", "global");
+        const neueSpielerInfo = await fb.getDocument("spieler", spielerUid);
 
-    spielTipp.innerText = "";
-    spielTippBtn.disabled = false;
+        if (!neueSpielerInfo || !spielStatus) return;
 
-    if (!spielStatus.freigegeben) {
-        container.innerHTML = `
-            <p>Station ${spielerInfo.fortschritt +1}</p>
-            <h3>Das Spiel ist aktuell pausiert.</h3>
-            <p>Bitte warte auf die Freigabe.</p>
-            <button id="status-btn">Aktualisieren</button>
-        `;
-        document.getElementById("status-btn").addEventListener("click", () => location.reload());
-        document.getElementById("spiel-tipp-container").style.display = "none";
-    }
-    else if (spielerInfo.fortschritt < alleFragen.length) {
-        if (spielStatus.tipps) {
-            document.getElementById("spiel-tipp-container").style.display = "block";
-            document.getElementById("spiel-tipp-btn").disabled = false;
+        if (spielerInfo.katalog !== neueSpielerInfo.katalog) {
+            await fragenLaden(neueSpielerInfo.katalog);
+        }
+
+        spielerInfo = neueSpielerInfo;
+
+        document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
+        document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
+
+        if (spielStatus.adminNachricht !== "") {
+            document.getElementById("admin-nachricht-display").style.display = "block";
         } else {
+            document.getElementById("admin-nachricht-display").style.display = "none";
+        }
+
+        spielTipp.innerText = "";
+        if (spielTippBtn) spielTippBtn.disabled = false;
+
+        if (!spielStatus.freigegeben) {
+            container.innerHTML = `
+                <p>Station ${spielerInfo.fortschritt + 1}</p>
+                <h3>Das Spiel ist aktuell pausiert.</h3>
+                <p>Bitte warte auf die Freigabe.</p>
+                <button id="status-btn">Aktualisieren</button>
+            `;
+            document.getElementById("spiel-tipp-container").style.display = "none";
+        }
+        else if (spielerInfo.fortschritt < alleFragen.length) {
+            if (spielStatus.tipps) {
+                document.getElementById("spiel-tipp-container").style.display = "block";
+                if (spielTippBtn) spielTippBtn.disabled = false;
+            } else {
+                document.getElementById("spiel-tipp-container").style.display = "none";
+            }
+
+            container.innerHTML = `
+                <p>Station ${spielerInfo.fortschritt + 1}</p>
+                <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
+                <textarea id="antwort-input" placeholder="Eure Antwort"></textarea>
+                <button id="antwort-btn">Antwort senden</button>
+                <p id="spiel-feedback" style="color:red;"></p>
+            `;
+            // KEIN addEventListener hier drin! Wird jetzt global unten geregelt.
+        }
+        else {
+            container.innerHTML = `<h3>Glückwunsch! Die Suche wurde erfolgreich gemeistert! 🎉</h3>`;
             document.getElementById("spiel-tipp-container").style.display = "none";
         }
 
-        container.innerHTML = `
-            <p>Station ${spielerInfo.fortschritt +1}</p>
-            <p>${alleFragen[spielerInfo.fortschritt].frage}</p>
-            <textarea id="antwort-input" placeholder="Eure Antwort"></textarea>
-            <button id="antwort-btn">Antwort senden</button>
-            <p id="spiel-feedback" style="color:red;"></p>
-        `;
-        document.getElementById("antwort-btn").addEventListener("click", pruefeAntwort);
-    }
-    else {
-        container.innerHTML = `<h3>Glückwunsch! Die Suche wurde erfolgreich gemeistert! 🎉</h3>`;
-        document.getElementById("spiel-tipp-container").style.display = "none";
+        spielBereich.style.display = "block";
+    } catch (error) {
+        console.error("Fehler beim Live-Laden der Station:", error);
     }
 }
 
@@ -104,7 +113,7 @@ async function pruefeAntwort() {
     if (istRichtig) {
         if (antwortBtn) {
             antwortBtn.disabled = true;
-            antwortBtn.innerText ="Bitte warten...";
+            antwortBtn.innerText = "Bitte warten...";
         }
 
         spielerInfo.fortschritt++;
@@ -114,17 +123,19 @@ async function pruefeAntwort() {
                 antworten: spielerInfo.antworten,
                 zeitstempel: Date.now()
             });
-            zeigeFrage();
+            await zeigeFrage();
         } catch (error) {
             console.error(error);
             feedback.innerText = "Fehler beim Speichern des Fortschritts.";
-            if (antwortBtn) antwortBtn.disabled = false;
+            if (antwortBtn) {
+                antwortBtn.disabled = false;
+                antwortBtn.innerText = "Antwort senden";
+            }
         }
     } else {
         feedback.style.color = "red";
         feedback.innerText = "Falsche Antwort! Versucht es noch einmal.";
 
-        // Animation Text
         feedback.classList.remove("shake-blink");
         void feedback.offsetWidth;
         feedback.classList.add("shake-blink");
@@ -133,9 +144,8 @@ async function pruefeAntwort() {
             antwortBtn.classList.remove("btn-error-flash");
             void antwortBtn.offsetWidth;
             antwortBtn.classList.add("btn-error-flash");
+            antwortBtn.disabled = true;
         }
-
-        if (antwortBtn) antwortBtn.disabled = true;
 
         try {
             await fb.updateDocument("spieler", spielerUid, {
@@ -166,21 +176,34 @@ async function fragenLaden(katalog) {
     }
 }
 
+// ---------------------------------------------
+// --- GLOBALER KLICK-WATCHER (Event Delegation) ---
+// ---------------------------------------------
+document.addEventListener("click", async (event) => {
+    // 1. Abfangen des dynamischen Antwort-Buttons
+    if (event.target && event.target.id === "antwort-btn") {
+        await pruefeAntwort();
+    }
+    
+    // 2. Abfangen des dynamischen Pausen-Aktualisieren-Buttons
+    if (event.target && event.target.id === "status-btn") {
+        location.reload();
+    }
+});
 
 // ---------------------------------------------
 // --- TIPP BUTTON ---
 // ---------------------------------------------
 document.getElementById("spiel-tipp-btn").addEventListener("click", async () => {
     const spielTipp = document.getElementById("spiel-tipp");
+    const tippBtn = document.getElementById("spiel-tipp-btn");
 
     if (!spielerInfo || alleFragen.length === 0) return; 
     if (spielerInfo.fortschritt === undefined || spielerInfo.fortschritt >= alleFragen.length) return;
 
-    const tippBtn = document.getElementById("spiel-tipp-btn");
-    tippBtn.disabled = true;
+    if (tippBtn) tippBtn.disabled = true;
 
     spielerInfo.tipps = (spielerInfo.tipps || 0) + 1;
-    
     spielTipp.innerText = alleFragen[spielerInfo.fortschritt].tipp1 || "Kein Tipp verfügbar.";
 
     try {
@@ -190,10 +213,9 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     } catch (error) {
         console.error(error);
         if (spielTipp) spielTipp.innerText = "Fehler beim Speichern der Tipps.";
-        tippBtn.disabled = false;
+        if (tippBtn) tippBtn.disabled = false;
     }
 });
-
 
 // ---------------------------------------------
 // --- LOGOUT BUTTON ---
