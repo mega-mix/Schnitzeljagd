@@ -52,3 +52,15 @@ document.getElementById("start-spiel-btn").addEventListener("click", () => windo
 // --- ADMIN BUTTON ---
 // ---------------------------------------------
 document.getElementById("start-admin-btn").addEventListener("click", () => window.location.href = "admin.html");
+
+// ---------------------------------------------
+// --- LOGOUT BUTTON ---
+// ---------------------------------------------
+document.getElementById("logout-btn").addEventListener("click", async () => {
+    try {
+        await fb.auth.signOut();
+        window.location.href = "index.html";
+    } catch (error) {
+        console.error("Fehler beim Logout:", error);
+    }
+});

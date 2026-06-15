@@ -18,7 +18,6 @@ document.getElementById("login-name").addEventListener("keyup", (event) => {
 
 document.getElementById("login-passwort").addEventListener("keyup", (event) => {
     if (event.key === "Enter") {
-        //event.preventDefault(); // Verhindert das standardmäßige Neuladen der Seite
         login();
     }
 });
@@ -35,6 +34,10 @@ async function login() {
     }
 
     // Login
+    const loginBtn = document.getElementById("login-btn");
+    loginBtn.disabled = true;
+    loginBtn.innerText = "Bitte warten...";
+
     try {
         await fb.loginSpieler(nameInput, passInput);
 
@@ -43,6 +46,11 @@ async function login() {
     } catch (error) {
         console.error(error);
         errorMsg.innerText = "Fehler beim Login.";
+    } finally {
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerText = "Starten";
+        }
     }
 }
 
@@ -94,6 +102,12 @@ document.getElementById("create-btn").addEventListener("click", async () => {
         return;
     }
 
+
+    // Erstellen
+    const createBtn = document.getElementById("create-btn");
+    createBtn.disabled = true;
+    createBtn.innerText = "Bitte warten...";
+
     try {
         await fb.registriereSpieler(nameInput, passInput);
         
@@ -111,6 +125,11 @@ document.getElementById("create-btn").addEventListener("click", async () => {
             errorMsg.innerText = "Dieser Spielername ist schon vergeben.";
         } else {
             errorMsg.innerText = "Fehler bei der Registrierung.";
+        }
+    } finally {
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerText = "Erstellen";
         }
     }
 });
