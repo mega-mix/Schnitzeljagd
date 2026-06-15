@@ -42,6 +42,7 @@ async function zeigeFrage() {
 
     const container = document.getElementById("spiel-frage");
     const spielTipp = document.getElementById("spiel-tipp");
+    const spielTippBtn = document.getElementById("spiel-tipp-btn");
 
     document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
     if (spielStatus.adminNachricht !== "") {
@@ -51,6 +52,7 @@ async function zeigeFrage() {
     }
 
     spielTipp.innerText = "";
+    spielTippBtn.disabled = false;
 
     if (!spielStatus.freigegeben) {
         container.innerHTML = `
@@ -188,6 +190,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     } catch (error) {
         console.error(error);
         if (spielTipp) spielTipp.innerText = "Fehler beim Speichern der Tipps.";
+        tippBtn.disabled = false;
     }
 });
 
