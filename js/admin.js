@@ -14,15 +14,29 @@ let spielerUid = "";
 // ---------------------------------------------
 // --- LOGIN ABWARTEN ---
 // ---------------------------------------------
+let authInitialisiert = false;
+
 fb.onAuthChanged(async (user) => {
+    if (authInitialisiert && !user) {
+        window.location.href = "index.html";
+        return;
+    }
+    
+    authInitialisiert = true;
+
     if (user) {
         spielerUid = user.uid;
-        spielerInfo = await fb.getDocument("spieler", spielerUid);
-        if (spielerInfo) {
-            if (spielerInfo.spielerName === "admin") {
-                document.getElementById("admin-bereich").style.display = "block";
-                ladeAlleSpieler();
+
+        try {
+            spielerInfo = await fb.getDocument("spieler", spielerUid);
+            if (spielerInfo) {
+                if (spielerInfo.spielerName === "admin") {
+                    document.getElementById("admin-bereich").style.display = "block";
+                    ladeAlleSpieler();
+                }
             }
+        } catch (error) {
+            console.error("Fehler bei der Auth-Initialisierung:", error);
         }
     } else {
         // Nicht eingeloggt? Rauswurf zurück zur Loginseite!

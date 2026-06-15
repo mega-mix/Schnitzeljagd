@@ -1,5 +1,6 @@
 import { FirebaseService, APP_VERSION } from "./classes/FirebaseService.js";
 
+
 const fb = new FirebaseService();
 
 document.getElementById("version").innerText = APP_VERSION;
@@ -9,22 +10,39 @@ let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
 
+
 // ---------------------------------------------
 // --- LOGIN ABWARTEN ---
 // ---------------------------------------------
+let authInitialisiert = false;
+
 fb.onAuthChanged(async (user) => {
+    if (authInitialisiert && !user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    authInitialisiert = true;
+
     if (user) {
         spielerUid = user.uid;
-        spielerInfo = await fb.getDocument("spieler", spielerUid);
-        if (spielerInfo) {
-            await fragenLaden(spielerInfo.katalog);
+
+        try {
+            spielerInfo = await fb.getDocument("spieler", spielerUid);
+            if (spielerInfo) {
+                await fragenLaden(spielerInfo.katalog);
+                await zeigeFrage();
+            } else {
+                windows.location.href = "index.html";
+            }
+        } catch (error) {
+            console.error("Fehler bei der Auth-Initialisierung:", error);
         }
-        
-        await zeigeFrage();
     } else {
         window.location.href = "index.html";
     }
 });
+
 
 // ---------------------------------------------
 // --- SPIEL LOGIK ---
