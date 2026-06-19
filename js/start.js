@@ -45,6 +45,16 @@ fb.onAuthChanged(async (user) => {
                     document.getElementById("start-admin-btn").style.display = "block";
                 }
 
+                const dropdownEpisoden = document.getElementById("start-episoden");
+                dropdownEpisoden.innerHTML = "";
+                spielerInfo.episoden.forEach((epp, i) => {
+                    const opt = document.createElement("option");
+                    opt.value = i;
+                    opt.textContent = "Episode " + (epp.name);
+                    dropdownEpisoden.appendChild(opt);
+                });
+                dropdownEpisoden.value = spielerInfo.episoden.findIndex(ep => ep.name === spielerInfo.aktiveEpisode);
+
                 document.getElementById("start-bereich").style.display = "block";
             }
         } catch (error) {
@@ -67,6 +77,23 @@ document.getElementById("start-spiel-btn").addEventListener("click", () => windo
 // --- ADMIN BUTTON ---
 // ---------------------------------------------
 document.getElementById("start-admin-btn").addEventListener("click", () => window.location.href = "admin.html");
+
+
+// ---------------------------------------------
+// --- EPISODEN DROPDOWN ---
+// ---------------------------------------------
+document.getElementById("start-episoden").addEventListener("change", async (event) => {
+    const auswahlEpisode = event.target.value;
+
+    spielerInfo.aktiveEpisode = spielerInfo.episoden[auswahlEpisode].name;
+
+    try {
+        await fb.updateDocument("spieler", spielerUid, spielerInfo);
+    } catch (error) {
+        console.error(error);
+    }
+});
+
 
 // ---------------------------------------------
 // --- LOGOUT BUTTON ---

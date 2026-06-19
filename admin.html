@@ -23,7 +23,7 @@
         <h2>Admin Bereich</h2>
         <button id="admin-freigabe-btn">Spiel freigeben</button>
         <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-bearbeiten-btn">Spieler bearbeiten</button>
+        <button id="admin-spieler-bearbeiten-btn">Spieler bearbeiten</button>
         <button id="admin-fragen-btn">Fragen bearbeiten</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
         <button id="admin-spieler-btn">Spieler anzeigen</button>
@@ -35,7 +35,7 @@
             <thead>
                 <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Spieler</th>
-                    <th style="padding: 8px;">K</th>
+                    <th style="padding: 8px;">E</th>
                     <th style="padding: 8px;">S</th>
                     <th style="padding: 8px;">T</th>
                     <th style="padding: 8px;">A</th>
@@ -61,16 +61,16 @@
         </table>
     </div>
 
-    <div id="admin-bearbeiten-bereich" style="display: none;">
-        <input type="text" id="bearbeiten-name" placeholder="Spielername">
-        <input type="number" min="1" id="bearbeiten-fortschritt" inputmode="numeric" placeholder="Station Nummer...">
-        <input type="number" min="1" id="bearbeiten-katalog" inputmode="numeric" placeholder="Katalog Nummer...">
-        <input type="number" min="0" id="bearbeiten-antworten" inputmode="numeric" placeholder="Antworten...">
-        <input type="number" min="0" id="bearbeiten-tipp" inputmode="numeric" placeholder="Tipps..."><br><br>
-        <button id="bearbeiten-save-btn">Speichern</button>
-        <button id="bearbeiten-delete-btn">Daten Löschen</button>
-        <button id="bearbeiten-abort-btn">Abbrechen</button>
-        <p id="bearbeiten-error-msg" style="color:red;"></p>
+    <div id="admin-spieler-bearbeiten-bereich" style="display: none;">
+        <select id="spieler-bearbeiten-name"></select>
+        <button id="spieler-bearbeiten-laden">Laden</button>
+        <select id="spieler-bearbeiten-station"></select>
+        <select id="spieler-bearbeiten-aktive-episode"></select>
+        <input type="number" min="0" id="spieler-bearbeiten-antworten" inputmode="numeric" placeholder="Antworten...">
+        <input type="number" min="0" id="spieler-bearbeiten-tipp" inputmode="numeric" placeholder="Tipps..."><br><br>
+        <button id="spieler-bearbeiten-save-btn">Speichern</button>
+        <button id="spieler-bearbeiten-abort-btn">Abbrechen</button>
+        <p id="spieler-bearbeiten-error-msg" style="color:red;"></p>
     </div>
 
     <div id="admin-nachricht-bereich" style="display: none;">
@@ -81,13 +81,13 @@
     </div>
 
     <div id="admin-fragen-bereich" style="display: none;">
-        <input type="number" min="1" id="fragen-nummer-laden" inputmode="numeric" placeholder="Station Nummer...">
-        <input type="number" min="1" id="fragen-katalog-laden" inputmode="numeric" placeholder="Katalog Nummer...">
+        <select id="fragen-nummer-laden"></select>
+        <select id="fragen-episode-laden"></select>
         <button id="fragen-laden-btn">Laden</button>
         <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
         <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
         <input type="number" min="1" id="fragen-nummer" inputmode="numeric" placeholder="Station...">
-        <input type="number" min="1" id="fragen-katalog" inputmode="numeric" placeholder="Katalog..."><br><br>
+        <input type="number" min="1" id="fragen-episode" inputmode="numeric" placeholder="Episode..."><br><br>
         <button id="fragen-save-btn">Speichern</button>
         <button id="fragen-delete-btn">Löschen</button>
         <button id="fragen-abort-btn">Abbrechen</button>

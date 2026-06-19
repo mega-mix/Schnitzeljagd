@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/fireba
 import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-export const APP_VERSION ="v1.4.6";
+export const APP_VERSION ="v1.4.7";
 
 export class FirebaseService {
     constructor() {
@@ -36,7 +36,7 @@ export class FirebaseService {
 
     /**
      * Registriert einen neuen Spieler im Auth-System UND legt sofort 
-     * das passende Fortschritts-Dokument in Firestore an (ID = UID).
+     * das passende Spieler-Dokument in Firestore an (ID = UID).
      */
     async registriereSpieler(spielerName, passwort) {
         const saubererName = spielerName.trim().replace(/[^a-zA-Z0-9 äöüÄÖÜß\-_]/g, "");
@@ -45,6 +45,11 @@ export class FirebaseService {
             .replace(/ä/gi, "ae").replace(/ö/gi, "oe").replace(/ü/gi, "ue").replace(/ß/gi, "ss")
 
         const fakeEmail = this._baueFakeEmail(emailName);
+
+        const episoden = [
+            { name: 1, station: 1, antworten: 0, tipps: 0, zeitstempel: Date.now() },
+            { name: 2, station: 1, antworten: 0, tipps: 0, zeitstempel: Date.now() }
+        ]
         
         // 1. Im Auth-System registrieren
         const userCredential = await createUserWithEmailAndPassword(this.auth, fakeEmail, passwort);
@@ -54,10 +59,11 @@ export class FirebaseService {
         const docRef = doc(this.db, "spieler", uid);
         await setDoc(docRef, {
             spielerName: saubererName.trim(),
-            fortschritt: 0,
-            katalog: 1,
+            station: 1,
+            aktiveEpisode: 1,
             tipps: 0,
-            antworten: 0
+            antworten: 0,
+            episoden: episoden
         });
 
         return uid;
@@ -103,7 +109,7 @@ export class FirebaseService {
      * Aktualisiert bestimmte Felder in einem bestehenden Dokument
      * @param {string} collectionName - Name der Collection
      * @param {string} docId - ID des Dokuments
-     * @param {Object} data - Die zu aktualisierenden Felder (z.B. { fortschritt: 2 })
+     * @param {Object} data - Die zu aktualisierenden Felder (z.B. { station: 2 })
      */
     async updateDocument(collectionName, docId, data) {
         const docRef = doc(this.db, collectionName, docId);
