@@ -206,7 +206,7 @@ document.getElementById("spieler-fortschritt-abort-btn").addEventListener("click
     document.getElementById("spieler-bereich").style.display = "block";
 });
 
-document.getElementById("spieler-fortschritt-refresh-btn").addEventListener("click", await ladeFortschritt());
+document.getElementById("spieler-fortschritt-refresh-btn").addEventListener("click", async () => ladeFortschritt());
 
 async function ladeFortschritt() {
     const tabelleBody = document.getElementById("spieler-fortschritt-tabelle-body");
