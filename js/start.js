@@ -11,9 +11,12 @@ let spielerInfo = {};
 let spielerUid = "";
 
 
-// ---------------------------------------------
-// --- LOGIN ABWARTEN ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- LOGIN ABWARTEN --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 let authInitialisiert = false;
 
 fb.onAuthChanged(async (user) => {
@@ -41,13 +44,21 @@ fb.onAuthChanged(async (user) => {
                     document.getElementById("admin-nachricht-display").style.display = "none";
                 }
 
+                document.getElementById("news-nachricht").innerText = spielStatus.news;
+                if (spielStatus.news !== "") {
+                    document.getElementById("news-nachricht-display").style.display = "block";
+                } else {
+                    document.getElementById("news-nachricht-display").style.display = "none";
+                }
+
                 if (spielerInfo.spielerName === "admin") {
                     document.getElementById("start-admin-btn").style.display = "block";
                 }
 
                 const dropdownEpisoden = document.getElementById("start-episoden");
                 dropdownEpisoden.innerHTML = "";
-                Object.entries(spielerInfo.episoden).forEach(([key, epp]) => {
+                Object.entries(spielerInfo.episoden).forEach(([key]) => {
+                    if (!spielerInfo.episoden[key].aktiv) return;
                     const opt = document.createElement("option");
                     opt.value = key; 
                     opt.textContent = "Episode " + key;
@@ -67,23 +78,32 @@ fb.onAuthChanged(async (user) => {
 });
 
 
-// ---------------------------------------------
-// --- SPIEL BUTTON ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- SPIEL BUTTON --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("start-spiel-btn").addEventListener("click", () => window.location.href = "game.html");
 
 
-// ---------------------------------------------
-// --- ADMIN BUTTON ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- ADMIN BUTTON --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("start-admin-btn").addEventListener("click", () => window.location.href = "admin.html");
 
 
-// ---------------------------------------------
-// --- EPISODEN DROPDOWN ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- EPISODEN DROPDOWN --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("start-episoden").addEventListener("change", async (event) => {
-    const auswahlEpisode = event.target.value;
+    const auswahlEpisode = parseFloat(event.target.value);
 
     spielerInfo.aktiveEpisode = auswahlEpisode;
 
@@ -97,9 +117,12 @@ document.getElementById("start-episoden").addEventListener("change", async (even
 });
 
 
-// ---------------------------------------------
-// --- LOGOUT BUTTON ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- LOGOUT BUTTON --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
         await fb.auth.signOut();

@@ -10,12 +10,14 @@ let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
 let alleSpieler = [];
-let episodenAnzahl = 4;
 
 
-// ---------------------------------------------
-// --- LOGIN ABWARTEN ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- LOGIN ABWARTEN --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 let authInitialisiert = false;
 
 fb.onAuthChanged(async (user) => {
@@ -34,7 +36,7 @@ fb.onAuthChanged(async (user) => {
             if (spielerInfo) {
                 if (spielerInfo.spielerName === "admin") {
                     document.getElementById("admin-bereich").style.display = "block";
-                    ladeAlleSpieler();
+                    ladeSpielstatus();
                 }
             }
         } catch (error) {
@@ -47,18 +49,17 @@ fb.onAuthChanged(async (user) => {
 });
 
 
-// ---------------------------------------------
-// --- ADMIN LOGIK ---
-// ---------------------------------------------
-async function ladeAlleSpieler() {
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- ADMIN BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+async function ladeSpielstatus() {
     spielStatus = await fb.getSpielStatus();
 
-    const tabelleBody = document.getElementById("admin-tabelle-body");
-    tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
-
-    await fragenLaden(spielerInfo.aktiveEpisode);
-
     document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
+
     if (spielStatus.adminNachricht !== "") {
         document.getElementById("admin-nachricht-display").style.display = "block";
     } else {
@@ -95,6 +96,121 @@ async function ladeAlleSpieler() {
         statusTipp.innerText ="Tipps gesperrt";
         statusTipp.style.color = "#E74C3C";
     }
+}
+
+document.getElementById("admin-fragen-btn").addEventListener("click", async () => {
+    const dropdownStation = document.getElementById("fragen-station-laden");
+
+    await fragenLaden(1);
+
+    dropdownStation.innerHTML = "";
+    alleFragen.forEach((frage, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Station " + (i+1);
+        dropdownStation.appendChild(opt);
+    });
+    dropdownStation.value = 0;
+
+    const dropdownEpisode = document.getElementById("fragen-episode-laden");
+    dropdownEpisode.innerHTML = "";
+    for (let i = 1; i <= spielStatus.episodenAnzahl; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Episode " + (i);
+        dropdownEpisode.appendChild(opt);
+    };
+    dropdownEpisode.value = 1;
+
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("admin-fragen-bereich").style.display = "block";
+});
+
+document.getElementById("admin-nachricht-btn").addEventListener("click", async () => {
+    document.getElementById("admin-nachricht").value = await fb.getAdminNachricht();
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("admin-nachricht-bereich").style.display = "block";
+});
+
+document.getElementById("admin-news-btn").addEventListener("click", async () => {
+    document.getElementById("admin-news").value = await fb.getAdminNews();
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("admin-news-bereich").style.display = "block";
+});
+
+document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
+    await fb.setzeSpielStatus(!spielStatus.freigegeben);
+    ladeSpielstatus();
+});
+
+document.getElementById("admin-tipp-btn").addEventListener("click", async () => {
+    await fb.setzeTippStatus(!spielStatus.tipps);
+    ladeSpielstatus();
+});
+
+document.getElementById("admin-spieler-btn").addEventListener("click", () => {
+    document.getElementById("admin-bereich").style.display = "none";
+    document.getElementById("spieler-bereich").style.display = "block";
+});
+
+
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- SPIELER BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+document.getElementById("spieler-abort-btn").addEventListener("click", () => {
+    document.getElementById("spieler-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
+});
+
+document.getElementById("spieler-lastlogin-btn").addEventListener("click", () => {
+    document.getElementById("spieler-bereich").style.display = "none";
+    document.getElementById("spieler-lastlogin-bereich").style.display = "block";
+});
+
+document.getElementById("spieler-bearbeiten-btn").addEventListener("click", async () => {
+    const dropdown = document.getElementById("spieler-bearbeiten-name");
+
+    alleSpieler = await fb.getAllDocuments("spieler");
+
+    dropdown.innerHTML = "";
+    alleSpieler.forEach((spieler) => {
+        if (spieler.spielerName === "admin") return;
+        const sp = document.createElement("option");
+        sp.value = spieler.spielerName;
+        sp.textContent = spieler.spielerName;
+        dropdown.appendChild(sp);
+    });
+
+    document.getElementById("spieler-bereich").style.display = "none";
+    document.getElementById("spieler-bearbeiten-bereich").style.display = "block";
+});
+
+document.getElementById("spieler-fortschritt-btn").addEventListener("click", async () => {
+    await ladeFortschritt();
+    document.getElementById("spieler-bereich").style.display = "none";
+    document.getElementById("spieler-fortschritt-bereich").style.display = "block";
+});
+
+
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- SPIELER FORTSCHRITT --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+document.getElementById("spieler-fortschritt-abort-btn").addEventListener("click", () => {
+    document.getElementById("spieler-fortschritt-bereich").style.display = "none";
+    document.getElementById("spieler-bereich").style.display = "block";
+});
+
+document.getElementById("spieler-fortschritt-refresh-btn").addEventListener("click", await ladeFortschritt());
+
+async function ladeFortschritt() {
+    const tabelleBody = document.getElementById("spieler-fortschritt-tabelle-body");
+    tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     try {
         alleSpieler = await fb.getAllDocuments("spieler");
@@ -137,77 +253,20 @@ async function ladeAlleSpieler() {
     }
 }
 
-document.getElementById("admin-refresh-btn").addEventListener("click", ladeAlleSpieler);
 
-document.getElementById("admin-spieler-bearbeiten-btn").addEventListener("click", () => {
-    const dropdown = document.getElementById("spieler-bearbeiten-name");
-    dropdown.innerHTML = "";
-    alleSpieler.forEach((spieler) => {
-        if (spieler.spielerName === "admin") return;
-        const sp = document.createElement("option");
-        sp.value = spieler.spielerName;
-        sp.textContent = spieler.spielerName;
-        dropdown.appendChild(sp);
-    });
-    document.getElementById("admin-bereich").style.display = "none";
-    document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "block";
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- SPIELER LASTLOGIN --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+document.getElementById("spieler-lastlogin-abort-btn").addEventListener("click", () => {
+    document.getElementById("spieler-lastlogin-bereich").style.display = "none";
+    document.getElementById("spieler-bereich").style.display = "block";
 });
 
-document.getElementById("admin-fragen-btn").addEventListener("click", () => {
-    const dropdownFrage = document.getElementById("fragen-station-laden");
-    dropdownFrage.innerHTML = "";
-    alleFragen.forEach((frage, i) => {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = "Station " + (i+1);
-        dropdownFrage.appendChild(opt);
-    });
-
-    const dropdownEpisode = document.getElementById("fragen-episode-laden");
-    dropdownEpisode.innerHTML = "";
-    for (let i = 1; i <= episodenAnzahl; i++) {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = "Episode " + (i);
-        dropdownEpisode.appendChild(opt);
-    };
-
-    document.getElementById("admin-bereich").style.display = "none";
-    document.getElementById("admin-fragen-bereich").style.display = "block";
-});
-
-document.getElementById("admin-nachricht-btn").addEventListener("click", async () => {
-    document.getElementById("admin-nachricht").value = await fb.getAdminNachricht();
-    document.getElementById("admin-bereich").style.display = "none";
-    document.getElementById("admin-nachricht-bereich").style.display = "block";
-});
-
-document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
-    await fb.setzeSpielStatus(!spielStatus.freigegeben);
-    ladeAlleSpieler();
-});
-
-document.getElementById("admin-tipp-btn").addEventListener("click", async () => {
-    await fb.setzeTippStatus(!spielStatus.tipps);
-    ladeAlleSpieler();
-});
-
-document.getElementById("admin-spieler-btn").addEventListener("click", () => {
-    document.getElementById("admin-bereich").style.display = "none";
-    document.getElementById("admin-spieler-bereich").style.display = "block";
-});
-
-
-// ---------------------------------------------
-// --- SPIELER ZEIGEN ---
-// ---------------------------------------------
-document.getElementById("spieler-abort-btn").addEventListener("click", () => {
-    document.getElementById("admin-spieler-bereich").style.display = "none";
-    document.getElementById("admin-bereich").style.display = "block";
-});
-
-document.getElementById("admin-spieler-btn").addEventListener("click", async () => {
-    const tabelleBody = document.getElementById("spieler-tabelle-body");
+document.getElementById("spieler-lastlogin-btn").addEventListener("click", async () => {
+    const tabelleBody = document.getElementById("spieler-lastlogin-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     try {
@@ -246,16 +305,19 @@ document.getElementById("admin-spieler-btn").addEventListener("click", async () 
 });
 
 
-// ---------------------------------------------
-// --- SPIELER BEARBEITEN ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- SPIELER BEARBEITEN --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("spieler-bearbeiten-abort-btn").addEventListener("click", () => {
     document.getElementById("spieler-bearbeiten-error-msg").innerText = "";
-    document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
-    document.getElementById("admin-bereich").style.display = "block";
+    document.getElementById("spieler-bearbeiten-bereich").style.display = "none";
+    document.getElementById("spieler-bereich").style.display = "block";
 });
 
-document.getElementById("spieler-bearbeiten-laden").addEventListener("click", async () => {
+document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click", async () => {
     const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
     const dropdownFrage = document.getElementById("spieler-bearbeiten-station");
     const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
@@ -273,7 +335,7 @@ document.getElementById("spieler-bearbeiten-laden").addEventListener("click", as
     });
 
     dropdownAktiveEpisode.innerHTML = "";
-    for (let i = 1; i <= episodenAnzahl; i++) {
+    for (let i = 1; i <= spielStatus.episodenAnzahl; i++) {
         const opt = document.createElement("option");
         opt.value = i;
         opt.textContent = "Episode " + (i);
@@ -302,33 +364,6 @@ document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("c
         dropdownFrage.appendChild(opt);
     });
 });
-
-/*
-document.getElementById("spieler-bearbeiten-delete-btn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
-    const errorMsg = document.getElementById("spieler-bearbeiten-error-msg");
-
-    try {
-        alleSpieler = await fb.getAllDocuments("spieler");
-        const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
-
-        if (gefundeneSpieler) {
-            await fb.deleteDocument("spieler", gefundeneSpieler.id);
-            alert(`Spieler ${nameInput} gelöscht.`);
-        } else {
-            errorMsg.innerText = "Spielername nicht gefunden.";
-            return;
-        }
-    } catch (error) {
-        console.error(error);
-        errorMsg.innerText = "Fehler beim Löschen der Daten.";
-    }
-
-    errorMsg.innerText = "";
-    document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
-    document.getElementById("admin-bereich").style.display = "block";
-});
-*/
 
 document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click", async () => {
     const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
@@ -371,10 +406,8 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
                 document.getElementById("spieler-bearbeiten-antwort-reset").checked = false;
                 document.getElementById("spieler-bearbeiten-tipp-reset").checked = false;
                 errorMsg.innerText = "";
-                document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
-                document.getElementById("admin-bereich").style.display = "block";
-
-                ladeAlleSpieler();
+                document.getElementById("spieler-bearbeiten-bereich").style.display = "none";
+                document.getElementById("spieler-bereich").style.display = "block";
 
                 bearbeitenSaveBtn.disabled = false;
                 bearbeitenSaveBtn.innerText = "Speichern";
@@ -392,9 +425,12 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
 });
 
 
-// ---------------------------------------------
-// --- ADMIN NACHRICHT BEREICH ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- ADMIN NACHRICHT BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("nachricht-abort-btn").addEventListener("click", () => {
     document.getElementById("admin-nachricht-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
@@ -414,7 +450,7 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
         errorMsg.innerText = "";
         document.getElementById("admin-nachricht-bereich").style.display = "none";
         document.getElementById("admin-bereich").style.display = "block";
-        ladeAlleSpieler();
+        ladeSpielstatus();
 
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
@@ -428,9 +464,49 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
 
 
 
-// ---------------------------------------------
-// --- FRAGEN BEARBEITEN ---
-// ---------------------------------------------
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- ADMIN NEWS BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+document.getElementById("news-abort-btn").addEventListener("click", () => {
+    document.getElementById("admin-news-bereich").style.display = "none";
+    document.getElementById("admin-bereich").style.display = "block";
+});
+
+document.getElementById("news-save-btn").addEventListener("click", async () => {
+    const nachrichtInput = document.getElementById("admin-news").value.trim();
+    const errorMsg = document.getElementById("news-error-msg");
+
+    const nachrichtSaveBtn = document.getElementById("news-save-btn");
+    nachrichtSaveBtn.disabled = true;
+    nachrichtSaveBtn.innerText = "Bitte warten";
+
+    try {
+        await fb.setzeAdminNews(nachrichtInput);
+
+        errorMsg.innerText = "";
+        document.getElementById("admin-news-bereich").style.display = "none";
+        document.getElementById("admin-bereich").style.display = "block";
+        ladeSpielstatus();
+
+        nachrichtSaveBtn.disabled = false;
+        nachrichtSaveBtn.innerText = "Speichern";
+    } catch (error) {
+        console.error(error);
+        errorMsg.innerText = "Fehler beim Speichern der News.";
+        nachrichtSaveBtn.disabled = false;
+        nachrichtSaveBtn.innerText = "Speichern";
+    }
+});
+
+
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- FRAGEN BEARBEITEN --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("fragen-abort-btn").addEventListener("click", () => {
     document.getElementById("admin-fragen-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
@@ -592,9 +668,12 @@ async function fragenLaden(episode) {
 }
 
 
-// ---------------------------------------------
-// --- LOGOUT BUTTON ---
-// ---------------------------------------------
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- LOGOUT BUTTON --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
         await fb.auth.signOut();

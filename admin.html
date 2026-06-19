@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ein Tag mit Lea und Paul</title>
+    <title>Schnitzeljagd</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -16,20 +16,51 @@
     </div>
     <img id="wave-top" src="assets/img/wave-top.svg" alt="">
 
-    <div id="admin-nachricht-display" style="display:none;">
-    </div>
 
-    <div id="admin-bereich" style="display:none;">
+    <div id="admin-nachricht-display" style="display:none;"></div>
+
+
+    <div id="admin-bereich" class="bereich" style="display:none;">
         <h2>Admin Bereich</h2>
         <button id="admin-freigabe-btn">Spiel freigeben</button>
         <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-spieler-bearbeiten-btn">Spieler bearbeiten</button>
         <button id="admin-fragen-btn">Fragen bearbeiten</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
+        <button id="admin-news-btn">News Nachricht</button>
         <button id="admin-spieler-btn">Spieler anzeigen</button>
-        <button id="admin-refresh-btn">Aktualisieren</button>
         <p id="admin-status">Spiel ...</p>
         <p id="admin-status-tipp">Tipps ...</p>
+    </div>
+
+
+    <div id="spieler-bereich" class="bereich" style="display: none;">
+        <h2>Spieler</h2>
+        <button id="spieler-bearbeiten-btn">Spieler bearbeiten</button>
+        <button id="spieler-lastlogin-btn">Spieler Logins</button>
+        <button id="spieler-fortschritt-btn">Spieler Fortschritt</button>
+        <button id="spieler-abort-btn">Zurück</button>
+    </div>
+
+
+    <div id="spieler-lastlogin-bereich" class="bereich" style="display: none;">
+        <h2>Spieler Logins</h2>
+        <button id="spieler-lastlogin-abort-btn">Zurück</button>
+        <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Spieler</th>
+                    <th style="padding: 8px;">letzter Login</th>
+                </tr>
+            </thead>
+            <tbody id="spieler-lastlogin-tabelle-body"></tbody>
+        </table>
+    </div>
+
+    
+    <div id="spieler-fortschritt-bereich" class="bereich" style="display: none;">
+        <h2>Spieler Fortschritt</h2>
+        <button id="spieler-fortschritt-abort-btn">Zurück</button>
+        <button id="spieler-fortschritt-refresh-btn">Aktualisieren</button>
         <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background-color: #f2f2f2;">
@@ -41,30 +72,17 @@
                     <th style="padding: 8px;">Zeitstempel</th>
                 </tr>
             </thead>
-            <tbody id="admin-tabelle-body">
+            <tbody id="spieler-fortschritt-tabelle-body">
                 </tbody>
         </table>
     </div>
 
-    <div id="admin-spieler-bereich" style="display: none;">
-        <button id="spieler-abort-btn">Zurück</button>
-        <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="padding: 8px;">Spieler</th>
-                    <th style="padding: 8px;">letzter Login</th>
-                </tr>
-            </thead>
-            <tbody id="spieler-tabelle-body">
-                </tbody>
-        </table>
-    </div>
 
-    <div id="admin-spieler-bearbeiten-bereich" style="display: none;">
+    <div id="spieler-bearbeiten-bereich" class="bereich" style="display: none;">
         <h2 style="margin-top: 16px;">Spieler bearbeiten</h2>
         <p class="beschreibung">Spielername:</p>
         <select id="spieler-bearbeiten-name"></select>
-        <button id="spieler-bearbeiten-laden">Laden</button>
+        <button id="spieler-bearbeiten-laden-btn">Laden</button>
         <br><br><hr>
         <p class="beschreibung">Episode:</p>
         <select id="spieler-bearbeiten-aktive-episode"></select>
@@ -84,7 +102,8 @@
         <p id="spieler-bearbeiten-error-msg" style="color:red;"></p>
     </div>
 
-    <div id="admin-nachricht-bereich" style="display: none;">
+
+    <div id="admin-nachricht-bereich" class="bereich" style="display: none;">
         <textarea type="text" id="admin-nachricht" placeholder="Admin Nachricht..."></textarea>
         <br><br>
         <button id="nachricht-save-btn">Speichern</button>
@@ -92,7 +111,17 @@
         <p id="nachrichten-error-msg" style="color:red;"></p>
     </div>
 
-    <div id="admin-fragen-bereich" style="display: none;">
+
+    <div id="admin-news-bereich" class="bereich" style="display: none;">
+        <textarea type="text" id="admin-news" placeholder="News..."></textarea>
+        <br><br>
+        <button id="news-save-btn">Speichern</button>
+        <button id="news-abort-btn">Abbrechen</button>
+        <p id="news-error-msg" style="color:red;"></p>
+    </div>
+
+
+    <div id="admin-fragen-bereich" class="bereich" style="display: none;">
         <p class="beschreibung">Episode:</p>
         <select id="fragen-episode-laden"></select>
         <p class="beschreibung">Station:</p>
@@ -112,6 +141,7 @@
         <button id="fragen-abort-btn">Abbrechen</button>
         <p id="fragen-error-msg" style="color:red;"></p>
     </div>
+
 
     <img id="wave-bottom" src="assets/img/wave-bottom.svg" alt="">
     <div id="bottom-bar">
