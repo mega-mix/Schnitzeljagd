@@ -30,7 +30,7 @@ fb.onAuthChanged(async (user) => {
         spielerUid = user.uid;
 
         try {
-            spielerInfo = await fb.getDocument("spieler", spielerUid);
+            spielerInfo = await fb.getSpielerInfo(spielerUid);
             if (spielerInfo) {
                 if (spielerInfo.spielerName === "admin") {
                     document.getElementById("admin-bereich").style.display = "block";
@@ -51,13 +51,12 @@ fb.onAuthChanged(async (user) => {
 // --- ADMIN LOGIK ---
 // ---------------------------------------------
 async function ladeAlleSpieler() {
-    spielStatus = await fb.getDocument("spielStatus", "global");
+    spielStatus = await fb.getSpielStatus();
 
     const tabelleBody = document.getElementById("admin-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     await fragenLaden(spielerInfo.aktiveEpisode);
-    document.getElementById("admin-menge-stationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
 
     document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
     if (spielStatus.adminNachricht !== "") {
@@ -105,8 +104,7 @@ async function ladeAlleSpieler() {
             if (spieler.spielerName && spieler.spielerName.toLowerCase() !== "admin") {
                 let uhrzeit = "--.--., --:--:--"
 
-                const indexEpisode = spieler.episoden.findIndex(ep => ep.name === spieler.aktiveEpisode);
-                const episode = spieler.episoden[indexEpisode];
+                const episode = spieler.episoden[spieler.aktiveEpisode];
 
                 if (episode.zeitstempel) {
                     uhrzeit = new Date(episode.zeitstempel).toLocaleTimeString("de-DE", {
@@ -124,8 +122,8 @@ async function ladeAlleSpieler() {
                         <td style="padding: 8px;">${spieler.spielerName}</td>
                         <td style="padding: 8px;">${spieler.aktiveEpisode}</td>
                         <td style="padding: 8px;">${episode.station}</td>
-                        <td style="padding: 8px;">${episode.tipps}</td>
-                        <td style="padding: 8px;">${episode.antworten}</td>
+                        <td style="padding: 8px;">${episode.antworten.length}</td>
+                        <td style="padding: 8px;">${episode.tipps.length}</td>
                         <td style="padding: 8px;">${uhrzeit}</td>
                     </tr>
                 `;
@@ -156,7 +154,7 @@ document.getElementById("admin-spieler-bearbeiten-btn").addEventListener("click"
 });
 
 document.getElementById("admin-fragen-btn").addEventListener("click", () => {
-    const dropdownFrage = document.getElementById("fragen-nummer-laden");
+    const dropdownFrage = document.getElementById("fragen-station-laden");
     dropdownFrage.innerHTML = "";
     alleFragen.forEach((frage, i) => {
         const opt = document.createElement("option");
@@ -261,8 +259,6 @@ document.getElementById("spieler-bearbeiten-laden").addEventListener("click", as
     const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
     const dropdownFrage = document.getElementById("spieler-bearbeiten-station");
     const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
-    const antwortInput =document.getElementById("spieler-bearbeiten-antworten");
-    const tippInput =document.getElementById("spieler-bearbeiten-tipp");
 
     const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler.value);
 
@@ -285,13 +281,10 @@ document.getElementById("spieler-bearbeiten-laden").addEventListener("click", as
     };
 
     const auswahlSpieler = alleSpieler[auswahlIndex];
-    const indexEpisode = auswahlSpieler.episoden.findIndex(ep => ep.name === auswahlSpieler.aktiveEpisode);
-    const spielerEpisode = auswahlSpieler.episoden[indexEpisode];
+    const spielerEpisode = auswahlSpieler.episoden[auswahlSpieler.aktiveEpisode];
 
     dropdownFrage.value = String(spielerEpisode.station -1);
     dropdownAktiveEpisode.value = String(auswahlSpieler.aktiveEpisode);
-    antwortInput.value = spielerEpisode.antworten;
-    tippInput.value = spielerEpisode.tipps;
 });
 
 document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("change", async (event) => {
@@ -341,11 +334,11 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
     const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
     const stationInput = parseInt(document.getElementById("spieler-bearbeiten-station").value)+1;
     const aktiveEpisodeInput = parseInt(document.getElementById("spieler-bearbeiten-aktive-episode").value);
-    const antwortenInput = parseInt(document.getElementById("spieler-bearbeiten-antworten").value);
-    const tippInput = parseInt(document.getElementById("spieler-bearbeiten-tipp").value);
+    const antwortReset = document.getElementById("spieler-bearbeiten-antwort-reset").checked;
+    const tippReset = document.getElementById("spieler-bearbeiten-tipp-reset").checked;
     const errorMsg = document.getElementById("spieler-bearbeiten-error-msg");
 
-    if (isNaN(stationInput) || isNaN(aktiveEpisodeInput) || isNaN(antwortenInput) || isNaN(tippInput)) {
+    if (isNaN(stationInput) || isNaN(aktiveEpisodeInput)) {
         errorMsg.innerText = "Bitte alle Felder ausfüllen.";
         return;
     } else {
@@ -357,13 +350,12 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
             alleSpieler = await fb.getAllDocuments("spieler");
             const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
 
-            const indexEpisode = gefundeneSpieler.episoden.findIndex(ep => ep.name === aktiveEpisodeInput);
             const episoden = gefundeneSpieler.episoden;
 
-            episoden[indexEpisode].station = stationInput;
-            episoden[indexEpisode].antworten = antwortenInput;
-            episoden[indexEpisode].tipps = tippInput;
-            episoden[indexEpisode].zeitstempel = Date.now();
+            episoden[aktiveEpisodeInput].station = stationInput;
+            if (antwortReset) episoden[aktiveEpisodeInput].antworten = [];
+            if (tippReset) episoden[aktiveEpisodeInput].tipps = [];
+            episoden[aktiveEpisodeInput].zeitstempel = Date.now();
             
             if (gefundeneSpieler) {
                 if (stationInput >= 1) {
@@ -376,11 +368,12 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
                 document.getElementById("spieler-bearbeiten-name").value = "";
                 document.getElementById("spieler-bearbeiten-station").value = "";
                 document.getElementById("spieler-bearbeiten-aktive-episode").value = "";
-                document.getElementById("spieler-bearbeiten-antworten").value = "";
-                document.getElementById("spieler-bearbeiten-tipp").value = "";
+                document.getElementById("spieler-bearbeiten-antwort-reset").checked = false;
+                document.getElementById("spieler-bearbeiten-tipp-reset").checked = false;
                 errorMsg.innerText = "";
                 document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
                 document.getElementById("admin-bereich").style.display = "block";
+
                 ladeAlleSpieler();
 
                 bearbeitenSaveBtn.disabled = false;
@@ -445,11 +438,11 @@ document.getElementById("fragen-abort-btn").addEventListener("click", () => {
     document.getElementById("fragen-antwort").value = "";
     document.getElementById("fragen-nummer").value = "";
     document.getElementById("fragen-error-msg").innerText = "";
-    document.getElementById("fragen-nummer-laden").value = 0;
+    document.getElementById("fragen-station-laden").value = 0;
 });
 
 document.getElementById("fragen-laden-btn").addEventListener("click", async () => {
-    const index = document.getElementById("fragen-nummer-laden").value;
+    const index = document.getElementById("fragen-station-laden").value;
     const episode = document.getElementById("fragen-episode-laden").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
@@ -485,7 +478,7 @@ document.getElementById("fragen-laden-btn").addEventListener("click", async () =
 });
 
 document.getElementById("fragen-episode-laden").addEventListener("change", async (event) => {
-    const dropdownFrage = document.getElementById("fragen-nummer-laden");
+    const dropdownFrage = document.getElementById("fragen-station-laden");
 
     const auswahlEpisode = event.target.value;
 

@@ -97,7 +97,7 @@
         background: none !important;
     }
 
-    #login-bereich, #admin-spieler-bereich, #start-bereich, #spiel-bereich, #admin-bereich, #create-bereich, #admin-bearbeiten-bereich, #admin-nachricht-bereich, #admin-fragen-bereich {
+    #login-bereich, #admin-spieler-bereich, #start-bereich, #spiel-bereich, #admin-bereich, #create-bereich, #admin-spieler-bearbeiten-bereich, #admin-nachricht-bereich, #admin-fragen-bereich {
         background-color: var(--card-color);
         margin-top: 40px;
         padding: 30px 20px;
@@ -172,6 +172,24 @@
         box-shadow: 0 0 0 3px rgba(42, 130, 201, 0.15);
     }
 
+    .checkbox-gruppe {
+        display: flex;
+        align-items: center; /* Setzt Checkbox und Text vertikal mittig */
+        gap: 8px;            /* Sauberer Abstand zwischen Box und Text */
+        margin: 12px 0;      /* Abstand nach oben und unten */
+    }
+
+    .checkbox-gruppe input[type="checkbox"] {
+        cursor: pointer;     /* Zeigt den Zeigefinger beim Drüberfahren */
+        width: 18px;         /* Etwas größer als der winzige Browser-Standard */
+        height: 18px;
+    }
+
+    .checkbox-gruppe label {
+        cursor: pointer;
+        font-size: 16px;
+    }
+
     #fragen-frage {
         height: 200px;
     }
@@ -241,4 +259,16 @@
         0% { background-color: var(--primary-color); }
         30% { background-color: var(--error-color); } /* Blitzt rot auf */
         100% { background-color: var(--primary-color); } /* Kehrt zur Standardfarbe zurück */
+    }
+
+    .beschreibung {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+        text-align: left;
+    }
+
+    .beschreibung + input,
+    .beschreibung + select,
+    .beschreibung + textarea {
+        margin-top: 5px;
     }

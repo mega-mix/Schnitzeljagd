@@ -9,6 +9,7 @@ let alleFragen = [];
 let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
+const anzahlAntwortenSpeicher = 50; // Grenze für gespeicherte Antworten
 
 
 // ---------------------------------------------
@@ -28,7 +29,7 @@ fb.onAuthChanged(async (user) => {
         spielerUid = user.uid;
 
         try {
-            spielerInfo = await fb.getDocument("spieler", spielerUid);
+            spielerInfo = await fb.getSpielerInfo(spielerUid);
             if (spielerInfo) {
                 await fragenLaden(spielerInfo.aktiveEpisode);
                 await zeigeFrage();
@@ -54,8 +55,8 @@ async function zeigeFrage() {
     const spielTippBtn = document.getElementById("spiel-tipp-btn");
 
     try {
-        spielStatus = await fb.getDocument("spielStatus", "global");
-        const neueSpielerInfo = await fb.getDocument("spieler", spielerUid);
+        spielStatus = await fb.getSpielStatus();
+        const neueSpielerInfo = await fb.getSpielerInfo(spielerUid);
 
         if (!neueSpielerInfo || !spielStatus) return;
 
@@ -73,12 +74,25 @@ async function zeigeFrage() {
         } else {
             document.getElementById("admin-nachricht-display").style.display = "none";
         }
+    
+        const keyEpisode = spielerInfo.aktiveEpisode;
+        const spielerEpisode = spielerInfo.episoden[keyEpisode];
+        const indexStation = spielerInfo.episoden[keyEpisode].station -1;
 
-        spielTipp.innerText = "";
-        if (spielTippBtn) spielTippBtn.disabled = false;
-
-        const indexEpisode = spielerInfo.episoden.findIndex(ep => ep.name === spielerInfo.aktiveEpisode);
-        const spielerEpisode = spielerInfo.episoden[indexEpisode];
+        // Tipp 1 anzeigen oder nicht
+        const indexTipp = spielerInfo.episoden[keyEpisode].tipps.findIndex(tp => tp.station === spielerInfo.episoden[keyEpisode].station);
+        if (indexTipp >= 0) {
+            const tippNr = spielerInfo.episoden[keyEpisode].tipps[indexTipp].tippNr;
+            switch (tippNr) {
+                case 1:
+                    spielTippBtn.disabled = true;
+                    spielTipp.innerText = alleFragen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
+                    break;
+            }
+        } else {
+            spielTippBtn.disabled = false;
+            spielTipp.innerText = "";
+        }
 
         if (!spielStatus.freigegeben) {
             container.innerHTML = `
@@ -92,7 +106,6 @@ async function zeigeFrage() {
         else if (spielerEpisode.station <= alleFragen.length) {
             if (spielStatus.tipps) {
                 document.getElementById("spiel-tipp-container").style.display = "block";
-                if (spielTippBtn) spielTippBtn.disabled = false;
             } else {
                 document.getElementById("spiel-tipp-container").style.display = "none";
             }
@@ -104,7 +117,6 @@ async function zeigeFrage() {
                 <button id="antwort-btn">Antwort senden</button>
                 <p id="spiel-feedback" style="color:red;"></p>
             `;
-            // KEIN addEventListener hier drin! Wird jetzt global unten geregelt.
         }
         else {
             container.innerHTML = `<h3>Glückwunsch! Die Suche wurde erfolgreich gemeistert! 🎉</h3>`;
@@ -121,30 +133,49 @@ async function pruefeAntwort() {
     const antwortBtn = document.getElementById("antwort-btn");
     const spielerAntwort = document.getElementById("antwort-input").value;
     const feedback = document.getElementById("spiel-feedback");
+    const bereinigteSpielerAntwort = spielerAntwort.toLowerCase().trim();
     let istRichtig = false;
 
-    const indexEpisode = spielerInfo.episoden.findIndex(ep => ep.name === spielerInfo.aktiveEpisode);
+    // Indexe speichern
+    const keyEpisode = spielerInfo.aktiveEpisode;
+    const indexStation = spielerInfo.episoden[keyEpisode].station -1;
 
-    if (spielerInfo.episoden[indexEpisode].station <= alleFragen.length) {
-        const korrekteAntwort = alleFragen[spielerInfo.episoden[indexEpisode].station-1].antwort.toLowerCase().trim();
-        const bereinigteSpielerAntwort = spielerAntwort.toLowerCase().trim();
+    // Antwort mit Lösung vergleichen
+    if (spielerInfo.episoden[keyEpisode].station <= alleFragen.length) {
+        const korrekteAntwort = alleFragen[spielerInfo.episoden[keyEpisode].station-1].antwort.toLowerCase().trim();
         istRichtig = bereinigteSpielerAntwort === korrekteAntwort;
     }
 
-    spielerInfo.episoden[indexEpisode].antworten = (spielerInfo.episoden[indexEpisode].antworten || 0) + 1;
-    spielerInfo.episoden[indexEpisode].zeitstempel = Date.now();
+    // Antwort in Array sichern
+    const antwortObj = {
+        station: spielerInfo.episoden[keyEpisode].station,
+        antwort: bereinigteSpielerAntwort,
+        zeitstempel: Date.now()
+    }
+    if (spielerInfo.episoden[keyEpisode].antworten.length >= anzahlAntwortenSpeicher) {
+        spielerInfo.episoden[keyEpisode].antworten = spielerInfo.episoden[keyEpisode].antworten.shift();
+    }
+    spielerInfo.episoden[keyEpisode].antworten.push(antwortObj);
 
+    spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();
+
+    // Auswertung
     if (istRichtig) {
+        // Antwort richtig
+
+        // Antwort Knopf deaktivieren
         if (antwortBtn) {
             antwortBtn.disabled = true;
             antwortBtn.innerText = "Bitte warten...";
         }
 
-        spielerInfo.episoden[indexEpisode].station++;
+        // Station hochzählen
+        spielerInfo.episoden[keyEpisode].station++;
 
+        // Daten speichern
         try {
             await fb.updateDocument("spieler", spielerUid, {
-                episoden: spielerInfo.episoden
+                [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
             });
             await zeigeFrage();
         } catch (error) {
@@ -156,13 +187,16 @@ async function pruefeAntwort() {
             }
         }
     } else {
+        // Antwort falsch
+
+        // Falsch Meldung anzeigen
         feedback.style.color = "red";
         feedback.innerText = "Falsche Antwort! Versucht es noch einmal.";
 
+        // Visuelles feedback GUI
         feedback.classList.remove("shake-blink");
         void feedback.offsetWidth;
         feedback.classList.add("shake-blink");
-
         if (antwortBtn) {
             antwortBtn.classList.remove("btn-error-flash");
             void antwortBtn.offsetWidth;
@@ -170,14 +204,17 @@ async function pruefeAntwort() {
             antwortBtn.disabled = true;
         }
 
+        // Daten speichern
         try {
             await fb.updateDocument("spieler", spielerUid, {
-                episoden: spielerInfo.episoden
+                [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
             });
         } catch (error) {
             console.error(error);
             feedback.innerText = "Fehler beim Speichern der Station.";
+
         } finally {
+            // Antwort Knopf freigeben
             if (antwortBtn) {
                 antwortBtn.disabled = false;
                 antwortBtn.innerText = "Antwort senden";
@@ -199,6 +236,7 @@ async function fragenLaden(episode) {
     }
 }
 
+
 // ---------------------------------------------
 // --- GLOBALER KLICK-WATCHER (Event Delegation) ---
 // ---------------------------------------------
@@ -214,6 +252,7 @@ document.addEventListener("click", async (event) => {
     }
 });
 
+
 // ---------------------------------------------
 // --- TIPP BUTTON ---
 // ---------------------------------------------
@@ -221,21 +260,37 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     const spielTipp = document.getElementById("spiel-tipp");
     const tippBtn = document.getElementById("spiel-tipp-btn");
 
-    const indexEpisode = spielerInfo.episoden.findIndex(ep => ep.name === spielerInfo.aktiveEpisode);
-
+    // Abbruch bei fehlenden spielerInfo oder alleFragen
     if (!spielerInfo || alleFragen.length === 0) return; 
-    if (spielerInfo.episoden[indexEpisode].station === undefined || spielerInfo.episoden[indexEpisode].station > alleFragen.length) return;
 
+    // Indexe speichern
+    const keyEpisode = spielerInfo.aktiveEpisode;
+    const indexStation = spielerInfo.episoden[keyEpisode].station -1;
+
+    // Abbruch bei fehlerhaften Werten
+    if (spielerInfo.episoden[keyEpisode].station === undefined || spielerInfo.episoden[keyEpisode].station > alleFragen.length) return;
+
+    // Tipp Knopf deaktivieren
     if (tippBtn) tippBtn.disabled = true;
 
-    spielerInfo.episoden[indexEpisode].tipps = (spielerInfo.episoden[indexEpisode].tipps || 0) + 1;
-    spielTipp.innerText = alleFragen[spielerInfo.episoden[indexEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
+    // Tipp in Array sichern
+    const tippObj = {
+        station: spielerInfo.episoden[keyEpisode].station,
+        tippNr: 1,
+        zeitstempel: Date.now() 
+    };
+    spielerInfo.episoden[keyEpisode].tipps.push(tippObj);
 
-    spielerInfo.episoden[indexEpisode].zeitstempel = Date.now();
+    // Tipp anzeigen
+    spielTipp.innerText = alleFragen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
 
+    // Zeitstempel generieren
+    spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();
+
+    // Daten speichern
     try {
         await fb.updateDocument("spieler", spielerUid, {
-            episoden: spielerInfo.episoden
+            [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
         });
     } catch (error) {
         console.error(error);
