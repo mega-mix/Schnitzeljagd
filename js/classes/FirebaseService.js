@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/fireba
 import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-export const APP_VERSION ="v1.5.0";
+
+export const APP_VERSION ="v1.6.0";
 
 export class FirebaseService {
     constructor() {
@@ -221,5 +222,22 @@ export class FirebaseService {
     async getAdminNachricht() {
         const daten = await this.getDocument("spielStatus", "global");
         return daten ? daten.adminNachricht : "";
+    }
+
+    /**
+     * Setzt eine globale News Nachricht
+     * @param {string} msg - Text der Nachricht
+     */
+    async setzeAdminNews(msg) {
+        await this.updateDocument("spielStatus", "global", { news: msg });
+    }
+
+    /**
+     * Ruft globale Admin News ab
+     * @returns {string} Text der Nachricht
+     */
+    async getAdminNews() {
+        const daten = await this.getDocument("spielStatus", "global");
+        return daten ? daten.news : "";
     }
 }

@@ -97,7 +97,7 @@
         background: none !important;
     }
 
-    #login-bereich, #admin-spieler-bereich, #start-bereich, #spiel-bereich, #admin-bereich, #create-bereich, #admin-spieler-bearbeiten-bereich, #admin-nachricht-bereich, #admin-fragen-bereich {
+    .bereich {
         background-color: var(--card-color);
         margin-top: 40px;
         padding: 30px 20px;
@@ -110,6 +110,17 @@
 
     #admin-nachricht-display {
         background-color: yellow;
+        padding: 30px 20px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(42, 130, 201, 0.08);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    #news-nachricht-display {
+        background-color: var(--card-color);
+        margin-top: 40px;
         padding: 30px 20px;
         border-radius: 16px;
         box-shadow: 0 8px 24px rgba(42, 130, 201, 0.08);
