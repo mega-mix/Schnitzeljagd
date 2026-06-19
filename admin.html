@@ -23,22 +23,21 @@
         <h2>Admin Bereich</h2>
         <button id="admin-freigabe-btn">Spiel freigeben</button>
         <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-bearbeiten-btn">Spieler bearbeiten</button>
+        <button id="admin-spieler-bearbeiten-btn">Spieler bearbeiten</button>
         <button id="admin-fragen-btn">Fragen bearbeiten</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
         <button id="admin-spieler-btn">Spieler anzeigen</button>
         <button id="admin-refresh-btn">Aktualisieren</button>
-        <p id="admin-menge-stationen">Es gibt ... Stationen.</p>
         <p id="admin-status">Spiel ...</p>
         <p id="admin-status-tipp">Tipps ...</p>
         <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Spieler</th>
-                    <th style="padding: 8px;">K</th>
+                    <th style="padding: 8px;">E</th>
                     <th style="padding: 8px;">S</th>
-                    <th style="padding: 8px;">T</th>
                     <th style="padding: 8px;">A</th>
+                    <th style="padding: 8px;">T</th>
                     <th style="padding: 8px;">Zeitstempel</th>
                 </tr>
             </thead>
@@ -61,33 +60,53 @@
         </table>
     </div>
 
-    <div id="admin-bearbeiten-bereich" style="display: none;">
-        <input type="text" id="bearbeiten-name" placeholder="Spielername">
-        <input type="number" min="1" id="bearbeiten-fortschritt" inputmode="numeric" placeholder="Station Nummer...">
-        <input type="number" min="1" id="bearbeiten-katalog" inputmode="numeric" placeholder="Katalog Nummer...">
-        <input type="number" min="0" id="bearbeiten-antworten" inputmode="numeric" placeholder="Antworten...">
-        <input type="number" min="0" id="bearbeiten-tipp" inputmode="numeric" placeholder="Tipps..."><br><br>
-        <button id="bearbeiten-save-btn">Speichern</button>
-        <button id="bearbeiten-delete-btn">Daten Löschen</button>
-        <button id="bearbeiten-abort-btn">Abbrechen</button>
-        <p id="bearbeiten-error-msg" style="color:red;"></p>
+    <div id="admin-spieler-bearbeiten-bereich" style="display: none;">
+        <h2 style="margin-top: 16px;">Spieler bearbeiten</h2>
+        <p class="beschreibung">Spielername:</p>
+        <select id="spieler-bearbeiten-name"></select>
+        <button id="spieler-bearbeiten-laden">Laden</button>
+        <br><br><hr>
+        <p class="beschreibung">Episode:</p>
+        <select id="spieler-bearbeiten-aktive-episode"></select>
+        <p class="beschreibung">Station:</p>
+        <select id="spieler-bearbeiten-station"></select>
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="spieler-bearbeiten-antwort-reset" name="antwortReset" value="aktiv">
+            <label for="spieler-bearbeiten-antwort-reset">Antworten zurücksetzen</label>
+        </div>
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="spieler-bearbeiten-tipp-reset" name="tippReset" value="aktiv">
+            <label for="spieler-bearbeiten-tipp-reset">Tipps zurücksetzen</label>
+        </div>
+        <br><br>
+        <button id="spieler-bearbeiten-save-btn">Speichern</button>
+        <button id="spieler-bearbeiten-abort-btn">Abbrechen</button>
+        <p id="spieler-bearbeiten-error-msg" style="color:red;"></p>
     </div>
 
     <div id="admin-nachricht-bereich" style="display: none;">
-        <input type="text" id="admin-nachricht" placeholder="Admin Nachricht..."><br><br>
+        <textarea type="text" id="admin-nachricht" placeholder="Admin Nachricht..."></textarea>
+        <br><br>
         <button id="nachricht-save-btn">Speichern</button>
         <button id="nachricht-abort-btn">Abbrechen</button>
         <p id="nachrichten-error-msg" style="color:red;"></p>
     </div>
 
     <div id="admin-fragen-bereich" style="display: none;">
-        <input type="number" min="1" id="fragen-nummer-laden" inputmode="numeric" placeholder="Station Nummer...">
-        <input type="number" min="1" id="fragen-katalog-laden" inputmode="numeric" placeholder="Katalog Nummer...">
+        <p class="beschreibung">Episode:</p>
+        <select id="fragen-episode-laden"></select>
+        <p class="beschreibung">Station:</p>
+        <select id="fragen-station-laden"></select>
         <button id="fragen-laden-btn">Laden</button>
+        <br><br><hr>
+        <p class="beschreibung">Frage:</p>
         <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
+        <p class="beschreibung">Antwort:</p>
         <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
-        <input type="number" min="1" id="fragen-nummer" inputmode="numeric" placeholder="Station...">
-        <input type="number" min="1" id="fragen-katalog" inputmode="numeric" placeholder="Katalog..."><br><br>
+        <p class="beschreibung">Episode:</p>
+        <input id="fragen-episode" type="number" min="1" inputmode="numeric" placeholder="Episode...">
+        <p class="beschreibung">Station:</p>
+        <input id="fragen-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
         <button id="fragen-save-btn">Speichern</button>
         <button id="fragen-delete-btn">Löschen</button>
         <button id="fragen-abort-btn">Abbrechen</button>

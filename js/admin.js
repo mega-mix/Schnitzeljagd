@@ -9,6 +9,8 @@ let alleFragen = [];
 let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
+let alleSpieler = [];
+let episodenAnzahl = 4;
 
 
 // ---------------------------------------------
@@ -28,7 +30,7 @@ fb.onAuthChanged(async (user) => {
         spielerUid = user.uid;
 
         try {
-            spielerInfo = await fb.getDocument("spieler", spielerUid);
+            spielerInfo = await fb.getSpielerInfo(spielerUid);
             if (spielerInfo) {
                 if (spielerInfo.spielerName === "admin") {
                     document.getElementById("admin-bereich").style.display = "block";
@@ -49,13 +51,12 @@ fb.onAuthChanged(async (user) => {
 // --- ADMIN LOGIK ---
 // ---------------------------------------------
 async function ladeAlleSpieler() {
-    spielStatus = await fb.getDocument("spielStatus", "global");
+    spielStatus = await fb.getSpielStatus();
 
     const tabelleBody = document.getElementById("admin-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
-    await fragenLaden(spielerInfo.katalog);
-    document.getElementById("admin-menge-stationen").innerText = `Es gibt ${alleFragen.length} Stationen`;
+    await fragenLaden(spielerInfo.aktiveEpisode);
 
     document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
     if (spielStatus.adminNachricht !== "") {
@@ -96,16 +97,17 @@ async function ladeAlleSpieler() {
     }
 
     try {
-        const alleSpieler = await fb.getAllDocuments("spieler");
+        alleSpieler = await fb.getAllDocuments("spieler");
         let htmlInhalt = "";
 
         alleSpieler.forEach((spieler) => {
             if (spieler.spielerName && spieler.spielerName.toLowerCase() !== "admin") {
                 let uhrzeit = "--.--., --:--:--"
-                const fortschritt = spieler.fortschritt !== undefined ? spieler.fortschritt : 0;
 
-                if (spieler.zeitstempel) {
-                    uhrzeit = new Date(spieler.zeitstempel).toLocaleTimeString("de-DE", {
+                const episode = spieler.episoden[spieler.aktiveEpisode];
+
+                if (episode.zeitstempel) {
+                    uhrzeit = new Date(episode.zeitstempel).toLocaleTimeString("de-DE", {
                         day: "2-digit",
                         month: "2-digit",
                         year: "2-digit",
@@ -118,10 +120,10 @@ async function ladeAlleSpieler() {
                 htmlInhalt += `
                     <tr>
                         <td style="padding: 8px;">${spieler.spielerName}</td>
-                        <td style="padding: 8px;">${spieler.katalog}</td>
-                        <td style="padding: 8px;">${fortschritt + 1}</td>
-                        <td style="padding: 8px;">${spieler.tipps}</td>
-                        <td style="padding: 8px;">${spieler.antworten}</td>
+                        <td style="padding: 8px;">${spieler.aktiveEpisode}</td>
+                        <td style="padding: 8px;">${episode.station}</td>
+                        <td style="padding: 8px;">${episode.antworten.length}</td>
+                        <td style="padding: 8px;">${episode.tipps.length}</td>
                         <td style="padding: 8px;">${uhrzeit}</td>
                     </tr>
                 `;
@@ -137,12 +139,39 @@ async function ladeAlleSpieler() {
 
 document.getElementById("admin-refresh-btn").addEventListener("click", ladeAlleSpieler);
 
-document.getElementById("admin-bearbeiten-btn").addEventListener("click", () => {
+document.getElementById("admin-spieler-bearbeiten-btn").addEventListener("click", () => {
+    const dropdown = document.getElementById("spieler-bearbeiten-name");
+    dropdown.innerHTML = "";
+    alleSpieler.forEach((spieler) => {
+        if (spieler.spielerName === "admin") return;
+        const sp = document.createElement("option");
+        sp.value = spieler.spielerName;
+        sp.textContent = spieler.spielerName;
+        dropdown.appendChild(sp);
+    });
     document.getElementById("admin-bereich").style.display = "none";
-    document.getElementById("admin-bearbeiten-bereich").style.display = "block";
+    document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "block";
 });
 
 document.getElementById("admin-fragen-btn").addEventListener("click", () => {
+    const dropdownFrage = document.getElementById("fragen-station-laden");
+    dropdownFrage.innerHTML = "";
+    alleFragen.forEach((frage, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Station " + (i+1);
+        dropdownFrage.appendChild(opt);
+    });
+
+    const dropdownEpisode = document.getElementById("fragen-episode-laden");
+    dropdownEpisode.innerHTML = "";
+    for (let i = 1; i <= episodenAnzahl; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Episode " + (i);
+        dropdownEpisode.appendChild(opt);
+    };
+
     document.getElementById("admin-bereich").style.display = "none";
     document.getElementById("admin-fragen-bereich").style.display = "block";
 });
@@ -182,7 +211,7 @@ document.getElementById("admin-spieler-btn").addEventListener("click", async () 
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     try {
-        const alleSpieler = await fb.getAllDocuments("spieler");
+        alleSpieler = await fb.getAllDocuments("spieler");
         let htmlInhalt = "";
 
         alleSpieler.forEach((spieler) => {
@@ -220,18 +249,67 @@ document.getElementById("admin-spieler-btn").addEventListener("click", async () 
 // ---------------------------------------------
 // --- SPIELER BEARBEITEN ---
 // ---------------------------------------------
-document.getElementById("bearbeiten-abort-btn").addEventListener("click", () => {
-    document.getElementById("bearbeiten-error-msg").innerText = "";
-    document.getElementById("admin-bearbeiten-bereich").style.display = "none";
+document.getElementById("spieler-bearbeiten-abort-btn").addEventListener("click", () => {
+    document.getElementById("spieler-bearbeiten-error-msg").innerText = "";
+    document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
 });
 
-document.getElementById("bearbeiten-delete-btn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("bearbeiten-name").value.trim();
-    const errorMsg = document.getElementById("bearbeiten-error-msg");
+document.getElementById("spieler-bearbeiten-laden").addEventListener("click", async () => {
+    const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
+    const dropdownFrage = document.getElementById("spieler-bearbeiten-station");
+    const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
+
+    const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler.value);
+
+    await fragenLaden(alleSpieler[auswahlIndex].aktiveEpisode);
+
+    dropdownFrage.innerHTML = "";
+    alleFragen.forEach((frage, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Station " + (i+1);
+        dropdownFrage.appendChild(opt);
+    });
+
+    dropdownAktiveEpisode.innerHTML = "";
+    for (let i = 1; i <= episodenAnzahl; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Episode " + (i);
+        dropdownAktiveEpisode.appendChild(opt);
+    };
+
+    const auswahlSpieler = alleSpieler[auswahlIndex];
+    const spielerEpisode = auswahlSpieler.episoden[auswahlSpieler.aktiveEpisode];
+
+    dropdownFrage.value = String(spielerEpisode.station -1);
+    dropdownAktiveEpisode.value = String(auswahlSpieler.aktiveEpisode);
+});
+
+document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("change", async (event) => {
+    const dropdownFrage = document.getElementById("spieler-bearbeiten-station");
+
+    const auswahlAktiveEpisode = event.target.value;
+
+    await fragenLaden(auswahlAktiveEpisode);
+
+    dropdownFrage.innerHTML = "";
+    alleFragen.forEach((frage, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Station " + (i+1);
+        dropdownFrage.appendChild(opt);
+    });
+});
+
+/*
+document.getElementById("spieler-bearbeiten-delete-btn").addEventListener("click", async () => {
+    const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
+    const errorMsg = document.getElementById("spieler-bearbeiten-error-msg");
 
     try {
-        const alleSpieler = await fb.getAllDocuments("spieler");
+        alleSpieler = await fb.getAllDocuments("spieler");
         const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
 
         if (gefundeneSpieler) {
@@ -247,49 +325,55 @@ document.getElementById("bearbeiten-delete-btn").addEventListener("click", async
     }
 
     errorMsg.innerText = "";
-    document.getElementById("admin-bearbeiten-bereich").style.display = "none";
+    document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
 });
+*/
 
-document.getElementById("bearbeiten-save-btn").addEventListener("click", async () => {
-    const nameInput = document.getElementById("bearbeiten-name").value.trim();
-    const stationInput = parseInt(document.getElementById("bearbeiten-fortschritt").value);
-    const katalogInput = parseInt(document.getElementById("bearbeiten-katalog").value);
-    const antwortenInput = parseInt(document.getElementById("bearbeiten-antworten").value);
-    const tippInput = parseInt(document.getElementById("bearbeiten-tipp").value);
-    const errorMsg = document.getElementById("bearbeiten-error-msg");
+document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click", async () => {
+    const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
+    const stationInput = parseInt(document.getElementById("spieler-bearbeiten-station").value)+1;
+    const aktiveEpisodeInput = parseInt(document.getElementById("spieler-bearbeiten-aktive-episode").value);
+    const antwortReset = document.getElementById("spieler-bearbeiten-antwort-reset").checked;
+    const tippReset = document.getElementById("spieler-bearbeiten-tipp-reset").checked;
+    const errorMsg = document.getElementById("spieler-bearbeiten-error-msg");
 
-    if (!nameInput || !stationInput || !katalogInput || isNaN(antwortenInput)) {
+    if (isNaN(stationInput) || isNaN(aktiveEpisodeInput)) {
         errorMsg.innerText = "Bitte alle Felder ausfüllen.";
         return;
     } else {
-        const bearbeitenSaveBtn = document.getElementById("bearbeiten-save-btn");
+        const bearbeitenSaveBtn = document.getElementById("spieler-bearbeiten-save-btn");
         bearbeitenSaveBtn.disabled = true;
         bearbeitenSaveBtn.innerText = "Bitte warten...";
 
         try {
-            const alleSpieler = await fb.getAllDocuments("spieler");
+            alleSpieler = await fb.getAllDocuments("spieler");
             const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
 
+            const episoden = gefundeneSpieler.episoden;
+
+            episoden[aktiveEpisodeInput].station = stationInput;
+            if (antwortReset) episoden[aktiveEpisodeInput].antworten = [];
+            if (tippReset) episoden[aktiveEpisodeInput].tipps = [];
+            episoden[aktiveEpisodeInput].zeitstempel = Date.now();
+            
             if (gefundeneSpieler) {
                 if (stationInput >= 1) {
                     await fb.updateDocument("spieler", gefundeneSpieler.id, {
-                        fortschritt: (stationInput -1),
-                        katalog: katalogInput,
-                        antworten: antwortenInput,
-                        tipps: tippInput,
-                        zeitstempel: Date.now()
+                        aktiveEpisode: aktiveEpisodeInput,
+                        episoden: episoden
                     });
                 }
 
-                document.getElementById("bearbeiten-name").value = "";
-                document.getElementById("bearbeiten-fortschritt").value = "";
-                document.getElementById("bearbeiten-katalog").value = "";
-                document.getElementById("bearbeiten-antworten").value = "";
-                document.getElementById("bearbeiten-tipp").value = "";
+                document.getElementById("spieler-bearbeiten-name").value = "";
+                document.getElementById("spieler-bearbeiten-station").value = "";
+                document.getElementById("spieler-bearbeiten-aktive-episode").value = "";
+                document.getElementById("spieler-bearbeiten-antwort-reset").checked = false;
+                document.getElementById("spieler-bearbeiten-tipp-reset").checked = false;
                 errorMsg.innerText = "";
-                document.getElementById("admin-bearbeiten-bereich").style.display = "none";
+                document.getElementById("admin-spieler-bearbeiten-bereich").style.display = "none";
                 document.getElementById("admin-bereich").style.display = "block";
+
                 ladeAlleSpieler();
 
                 bearbeitenSaveBtn.disabled = false;
@@ -354,12 +438,12 @@ document.getElementById("fragen-abort-btn").addEventListener("click", () => {
     document.getElementById("fragen-antwort").value = "";
     document.getElementById("fragen-nummer").value = "";
     document.getElementById("fragen-error-msg").innerText = "";
-    document.getElementById("fragen-nummer-laden").value = 0;
+    document.getElementById("fragen-station-laden").value = 0;
 });
 
 document.getElementById("fragen-laden-btn").addEventListener("click", async () => {
-    const index = document.getElementById("fragen-nummer-laden").value -1;
-    const katalog = document.getElementById("fragen-katalog-laden").value;
+    const index = document.getElementById("fragen-station-laden").value;
+    const episode = document.getElementById("fragen-episode-laden").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
     const fragenLadenBtn = document.getElementById("fragen-laden-btn");
@@ -367,22 +451,22 @@ document.getElementById("fragen-laden-btn").addEventListener("click", async () =
     fragenLadenBtn.innerText = "Bitte warten...";
 
     try {
-        await fragenLaden(katalog);
+        await fragenLaden(episode);
 
         if (index >= alleFragen.length) {
-            errorMsg.innerText = "Diese Stations-Nummer existiert in diesem Katalog nicht.";
+            errorMsg.innerText = "Diese Stations-Nummer existiert in dieser Episode nicht.";
             
             document.getElementById("fragen-frage").value = "";
             document.getElementById("fragen-antwort").value = "";
             document.getElementById("fragen-nummer").value = "";
-            document.getElementById("fragen-katalog").value = "";
+            document.getElementById("fragen-episode").value = "";
             return;
         }
 
         document.getElementById("fragen-frage").value = alleFragen[index].frage;
         document.getElementById("fragen-antwort").value = alleFragen[index].antwort;
-        document.getElementById("fragen-nummer").value = index +1;
-        document.getElementById("fragen-katalog").value = katalog;
+        document.getElementById("fragen-nummer").value = parseFloat(index) +1;
+        document.getElementById("fragen-episode").value = episode;
         errorMsg.innerText = "";
     } catch (error) {
         console.error(error);
@@ -393,11 +477,27 @@ document.getElementById("fragen-laden-btn").addEventListener("click", async () =
     }
 });
 
+document.getElementById("fragen-episode-laden").addEventListener("change", async (event) => {
+    const dropdownFrage = document.getElementById("fragen-station-laden");
+
+    const auswahlEpisode = event.target.value;
+
+    await fragenLaden(auswahlEpisode);
+
+    dropdownFrage.innerHTML = "";
+    alleFragen.forEach((frage, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Station " + (i+1);
+        dropdownFrage.appendChild(opt);
+    });
+});
+
 document.getElementById("fragen-save-btn").addEventListener("click", async () => {
     const frageInput = document.getElementById("fragen-frage").value;
     const antwortInput = document.getElementById("fragen-antwort").value;
-    const indexInput = document.getElementById("fragen-nummer").value -1;
-    const katalogInput = document.getElementById("fragen-katalog").value;
+    const indexInput = document.getElementById("fragen-nummer").value;
+    const episodeInput = document.getElementById("fragen-episode").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
     if (!frageInput || !antwortInput || !indexInput) {
@@ -414,20 +514,19 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
         antwort: antwortInput
     };
 
-    const katalogPath = "fragen" + katalogInput;
+    const episodePath = "episode" + episodeInput;
 
     try {
-        const checkExists = await fb.getDocument(katalogPath, indexInput.toString());
-
+        const checkExists = await fb.getDocument(episodePath, indexInput.toString());
         if (checkExists !== null) {
-            await fb.updateDocument(katalogPath, indexInput.toString(), neueFrage);
+            await fb.updateDocument(episodePath, indexInput.toString(), neueFrage);
         } else {
-            await fb.createDocument(katalogPath, indexInput.toString(), neueFrage);
+            await fb.createDocument(episodePath, indexInput.toString(), neueFrage);
         }
 
         errorMsg.innerText = "";
     } catch (error) {
-        console.error("Daten werden nicht geladen:", error);
+        console.error("Daten werden nicht gespeichert:", error);
         errorMsg.innerText = "Fehler beim speichern der Daten.";
     } finally {
         if (fragenSaveBtn) {
@@ -439,8 +538,8 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
 });
 
 document.getElementById("fragen-delete-btn").addEventListener("click", async () => {
-    const indexInput = document.getElementById("fragen-nummer").value -1;
-    const katalogInput = document.getElementById("fragen-katalog").value;
+    const indexInput = document.getElementById("fragen-nummer").value;
+    const episodeInput = document.getElementById("fragen-episode").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
     if (!indexInput) {
@@ -455,13 +554,13 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
     const entscheidung = confirm(`Möchten Sie die Frage ${indexInput} wirklich löschen?`);
     if (!entscheidung) return;
 
-    const katalogPath = "fragen" + katalogInput;
+    const episodePath = "fragen" + episodeInput;
 
     try {
-        const checkExists = await fb.getDocument(katalogPath, indexInput.toString());
+        const checkExists = await fb.getDocument(episodePath, indexInput.toString());
 
         if (checkExists !== null) {
-            await fb.deleteDocument(katalogPath, indexInput.toString());
+            await fb.deleteDocument(episodePath, indexInput.toString());
         } else {
             errorMsg.innerText = "Datei existiert nicht!";
             return;
@@ -479,10 +578,10 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
     }
 });
 
-async function fragenLaden(katalog) {
+async function fragenLaden(episode) {
     try {
-        const katalogPath = "fragen" + katalog;
-        const geladeneFragen = await fb.getAllDocuments(katalogPath);
+        const episodePath = "episode" + episode;
+        const geladeneFragen = await fb.getAllDocuments(episodePath);
 
         alleFragen = geladeneFragen.sort((a, b) => {
             return a.id.localeCompare(b.id, undefined, { numeric: true });

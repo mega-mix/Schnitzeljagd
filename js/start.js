@@ -28,9 +28,9 @@ fb.onAuthChanged(async (user) => {
         spielerUid = user.uid;
 
         try {
-            spielerInfo = await fb.getDocument("spieler", spielerUid);
+            spielerInfo = await fb.getSpielerInfo(spielerUid);
             if (spielerInfo) {
-                spielStatus = await fb.getDocument("spielStatus", "global");
+                spielStatus = await fb.getSpielStatus();
 
                 document.getElementById("start-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
 
@@ -44,6 +44,16 @@ fb.onAuthChanged(async (user) => {
                 if (spielerInfo.spielerName === "admin") {
                     document.getElementById("start-admin-btn").style.display = "block";
                 }
+
+                const dropdownEpisoden = document.getElementById("start-episoden");
+                dropdownEpisoden.innerHTML = "";
+                Object.entries(spielerInfo.episoden).forEach(([key, epp]) => {
+                    const opt = document.createElement("option");
+                    opt.value = key; 
+                    opt.textContent = "Episode " + key;
+                    dropdownEpisoden.appendChild(opt);
+                });
+                dropdownEpisoden.value = spielerInfo.aktiveEpisode;
 
                 document.getElementById("start-bereich").style.display = "block";
             }
@@ -67,6 +77,25 @@ document.getElementById("start-spiel-btn").addEventListener("click", () => windo
 // --- ADMIN BUTTON ---
 // ---------------------------------------------
 document.getElementById("start-admin-btn").addEventListener("click", () => window.location.href = "admin.html");
+
+
+// ---------------------------------------------
+// --- EPISODEN DROPDOWN ---
+// ---------------------------------------------
+document.getElementById("start-episoden").addEventListener("change", async (event) => {
+    const auswahlEpisode = event.target.value;
+
+    spielerInfo.aktiveEpisode = auswahlEpisode;
+
+    try {
+        await fb.updateDocument("spieler", spielerUid, {
+            aktiveEpisode: spielerInfo.aktiveEpisode
+        });
+    } catch (error) {
+        console.error(error);
+    }
+});
+
 
 // ---------------------------------------------
 // --- LOGOUT BUTTON ---

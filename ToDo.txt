@@ -1,0 +1,6 @@
+- episoden.aktiv mit einbinden bei auswahl
+- admin neue episoden freigeben können
+- spieler müssen neue episoden laden können
+- spieler über update informieren
+- generelle news bei spieler anzeigen
+- admin seite mit spielerfortschritt separieren

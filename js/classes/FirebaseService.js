@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-export const APP_VERSION ="v1.4.6";
+export const APP_VERSION ="v1.5.0";
 
 export class FirebaseService {
     constructor() {
@@ -36,7 +36,7 @@ export class FirebaseService {
 
     /**
      * Registriert einen neuen Spieler im Auth-System UND legt sofort 
-     * das passende Fortschritts-Dokument in Firestore an (ID = UID).
+     * das passende Spieler-Dokument in Firestore an (ID = UID).
      */
     async registriereSpieler(spielerName, passwort) {
         const saubererName = spielerName.trim().replace(/[^a-zA-Z0-9 äöüÄÖÜß\-_]/g, "");
@@ -45,6 +45,11 @@ export class FirebaseService {
             .replace(/ä/gi, "ae").replace(/ö/gi, "oe").replace(/ü/gi, "ue").replace(/ß/gi, "ss")
 
         const fakeEmail = this._baueFakeEmail(emailName);
+
+        const episoden = {
+            1: { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() },
+            2: { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() }
+        }
         
         // 1. Im Auth-System registrieren
         const userCredential = await createUserWithEmailAndPassword(this.auth, fakeEmail, passwort);
@@ -54,10 +59,8 @@ export class FirebaseService {
         const docRef = doc(this.db, "spieler", uid);
         await setDoc(docRef, {
             spielerName: saubererName.trim(),
-            fortschritt: 0,
-            katalog: 1,
-            tipps: 0,
-            antworten: 0
+            aktiveEpisode: 1,
+            episoden: episoden
         });
 
         return uid;
@@ -79,11 +82,30 @@ export class FirebaseService {
     }
 
     /**
-     * Gibt die UID des aktuell eingeloggten Benutzers zurück (oder null)
+     * Holt den aktuellen Spielstatus von der Datenbank
      */
-    get aktuelleUid() {
-        return this.auth.currentUser ? this.auth.currentUser.uid : null;
+    async getSpielStatus() {
+        const docRef = doc(this.db, "spielStatus", "global");
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) return docSnap.data();
+        return null;
     }
+
+
+    /**
+     * Holt Spieler Informationen aus der Datenbank
+     * @param {string} uid - User ID
+     * @returns {Object|null} Die Daten des Spielers oder null, wenn er nicht existiert
+     */
+    async getSpielerInfo(uid) {
+        const docRef = doc(this.db, "spieler", uid);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) return docSnap.data();
+        return null;
+    }
+
 
     /**
      * Holt ein einzelnes Dokument aus einer Collection anhand der ID
@@ -103,7 +125,7 @@ export class FirebaseService {
      * Aktualisiert bestimmte Felder in einem bestehenden Dokument
      * @param {string} collectionName - Name der Collection
      * @param {string} docId - ID des Dokuments
-     * @param {Object} data - Die zu aktualisierenden Felder (z.B. { fortschritt: 2 })
+     * @param {Object} data - Die zu aktualisierenden Felder (z.B. { station: 2 })
      */
     async updateDocument(collectionName, docId, data) {
         const docRef = doc(this.db, collectionName, docId);
