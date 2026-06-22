@@ -21,6 +21,7 @@ let alleSpieler = [];
 let authInitialisiert = false;
 
 fb.onAuthChanged(async (user) => {
+    // Sicherheit wenn Ident durch ist und noch kein Nutzer da ist
     if (authInitialisiert && !user) {
         window.location.href = "index.html";
         return;
@@ -28,9 +29,11 @@ fb.onAuthChanged(async (user) => {
     
     authInitialisiert = true;
 
+    // Daten von Spieler laden
     if (user) {
         spielerUid = user.uid;
 
+        // Datenbank Zugriff
         try {
             spielerInfo = await fb.getSpielerInfo(spielerUid);
             if (spielerInfo) {
@@ -56,31 +59,24 @@ fb.onAuthChanged(async (user) => {
 // *-------------------- ADMIN BEREICH --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 async function ladeSpielstatus() {
+    // Datenbank Spielstatus abrufen
     spielStatus = await fb.getSpielStatus();
 
+    // Admin Nachricht anzeigen
     document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
-
     if (spielStatus.adminNachricht !== "") {
         document.getElementById("admin-nachricht-display").style.display = "block";
     } else {
         document.getElementById("admin-nachricht-display").style.display = "none";
     }
 
+    // Spielfreigabe auswerten und anzeigen
+    const status = document.getElementById("admin-status");
     if (spielStatus.freigegeben) {
         document.getElementById("admin-freigabe-btn").innerText = "Spiel pausieren";
     } else {
         document.getElementById("admin-freigabe-btn").innerText = "Spiel freigeben";
     }
-
-    if (spielStatus.tipps) {
-        document.getElementById("admin-tipp-btn").innerText = "Tipps sperren";
-    } else {
-        document.getElementById("admin-tipp-btn").innerText = "Tipps freigeben";
-    }
-
-    const status = document.getElementById("admin-status");
-    const statusTipp = document.getElementById("admin-status-tipp");
-
     if (spielStatus.freigegeben) {
         status.innerText ="Spiel aktiv";
         status.style.color = "#2ECC71";
@@ -89,6 +85,13 @@ async function ladeSpielstatus() {
         status.style.color = "#E74C3C";
     }
 
+    // Tpppfreigabe auswerten und anzeigen
+    const statusTipp = document.getElementById("admin-status-tipp");
+    if (spielStatus.tipps) {
+        document.getElementById("admin-tipp-btn").innerText = "Tipps sperren";
+    } else {
+        document.getElementById("admin-tipp-btn").innerText = "Tipps freigeben";
+    }
     if (spielStatus.tipps) {
         statusTipp.innerText ="Tipps aktiv";
         statusTipp.style.color = "#2ECC71";
@@ -99,10 +102,11 @@ async function ladeSpielstatus() {
 }
 
 document.getElementById("admin-fragen-btn").addEventListener("click", async () => {
-    const dropdownStation = document.getElementById("fragen-station-laden");
-
+    // Fragen von Datenbank laden
     await fragenLaden(1);
 
+    // Dropdown Station füllen
+    const dropdownStation = document.getElementById("fragen-station-laden");
     dropdownStation.innerHTML = "";
     alleFragen.forEach((frage, i) => {
         const opt = document.createElement("option");
@@ -112,6 +116,7 @@ document.getElementById("admin-fragen-btn").addEventListener("click", async () =
     });
     dropdownStation.value = 0;
 
+    // Dropdown Episoden füllen
     const dropdownEpisode = document.getElementById("fragen-episode-laden");
     dropdownEpisode.innerHTML = "";
     for (let i = 1; i <= spielStatus.episodenAnzahl; i++) {
@@ -122,33 +127,43 @@ document.getElementById("admin-fragen-btn").addEventListener("click", async () =
     };
     dropdownEpisode.value = 1;
 
+    // Bereiche umschalten
     document.getElementById("admin-bereich").style.display = "none";
     document.getElementById("admin-fragen-bereich").style.display = "block";
 });
 
 document.getElementById("admin-nachricht-btn").addEventListener("click", async () => {
+    // Admin Nachricht aus Datenbank laden
     document.getElementById("admin-nachricht").value = await fb.getAdminNachricht();
+
+    // Bereiche umschalten
     document.getElementById("admin-bereich").style.display = "none";
     document.getElementById("admin-nachricht-bereich").style.display = "block";
 });
 
 document.getElementById("admin-news-btn").addEventListener("click", async () => {
+    // News aus Datenbank laden
     document.getElementById("admin-news").value = await fb.getAdminNews();
+
+    // Bereiche umschalten
     document.getElementById("admin-bereich").style.display = "none";
     document.getElementById("admin-news-bereich").style.display = "block";
 });
 
 document.getElementById("admin-freigabe-btn").addEventListener("click", async () => {
+    // Spielfreigabe toggeln
     await fb.setzeSpielStatus(!spielStatus.freigegeben);
     ladeSpielstatus();
 });
 
 document.getElementById("admin-tipp-btn").addEventListener("click", async () => {
+    // Tippfreigabe toggeln
     await fb.setzeTippStatus(!spielStatus.tipps);
     ladeSpielstatus();
 });
 
 document.getElementById("admin-spieler-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("admin-bereich").style.display = "none";
     document.getElementById("spieler-bereich").style.display = "block";
 });
@@ -161,35 +176,42 @@ document.getElementById("admin-spieler-btn").addEventListener("click", () => {
 // *-------------------- SPIELER BEREICH --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("spieler-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("spieler-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
 });
 
 document.getElementById("spieler-lastlogin-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("spieler-bereich").style.display = "none";
     document.getElementById("spieler-lastlogin-bereich").style.display = "block";
 });
 
 document.getElementById("spieler-bearbeiten-btn").addEventListener("click", async () => {
-    const dropdown = document.getElementById("spieler-bearbeiten-name");
-
+    // Alle Spieler von Datenbank laden
     alleSpieler = await fb.getAllDocuments("spieler");
 
-    dropdown.innerHTML = "";
+    // Dropdown mit Daten füllen
+    const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
+    dropdownSpieler.innerHTML = "";
     alleSpieler.forEach((spieler) => {
         if (spieler.spielerName === "admin") return;
         const sp = document.createElement("option");
         sp.value = spieler.spielerName;
         sp.textContent = spieler.spielerName;
-        dropdown.appendChild(sp);
+        dropdownSpieler.appendChild(sp);
     });
 
+    // Bereiche umschalten
     document.getElementById("spieler-bereich").style.display = "none";
     document.getElementById("spieler-bearbeiten-bereich").style.display = "block";
 });
 
 document.getElementById("spieler-fortschritt-btn").addEventListener("click", async () => {
+    // Lade Spielerfortschritt von Datenbank und in Tabelle anzeigen
     await ladeFortschritt();
+
+    // Bereiche umschalten
     document.getElementById("spieler-bereich").style.display = "none";
     document.getElementById("spieler-fortschritt-bereich").style.display = "block";
 });
@@ -202,26 +224,37 @@ document.getElementById("spieler-fortschritt-btn").addEventListener("click", asy
 // *-------------------- SPIELER FORTSCHRITT --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("spieler-fortschritt-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("spieler-fortschritt-bereich").style.display = "none";
     document.getElementById("spieler-bereich").style.display = "block";
 });
 
-document.getElementById("spieler-fortschritt-refresh-btn").addEventListener("click", async () => ladeFortschritt());
+document.getElementById("spieler-fortschritt-refresh-btn").addEventListener("click", async () => {
+    // Spielerfortschritt von Datenbank laden und in Tabelle anzeigen
+    ladeFortschritt();
+});
 
 async function ladeFortschritt() {
+    // Tabelle vorbereiten
     const tabelleBody = document.getElementById("spieler-fortschritt-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
+    // Daten aus Datenbank laden
     try {
+        // Alle Spieler aus Datenbank laden
         alleSpieler = await fb.getAllDocuments("spieler");
+
+        // Tabellenvariable leeren
         let htmlInhalt = "";
 
         alleSpieler.forEach((spieler) => {
+            // Alle Spieler, außer Admin
             if (spieler.spielerName && spieler.spielerName.toLowerCase() !== "admin") {
                 let uhrzeit = "--.--., --:--:--"
 
                 const episode = spieler.episoden[spieler.aktiveEpisode];
 
+                // Zeitstempel formatieren
                 if (episode.zeitstempel) {
                     uhrzeit = new Date(episode.zeitstempel).toLocaleTimeString("de-DE", {
                         day: "2-digit",
@@ -233,6 +266,7 @@ async function ladeFortschritt() {
                     });
                 }
                 
+                // Tabelle generieren
                 htmlInhalt += `
                     <tr>
                         <td style="padding: 8px;">${spieler.spielerName}</td>
@@ -246,6 +280,7 @@ async function ladeFortschritt() {
             }
         });
 
+        // Tabelle füllen
         tabelleBody.innerHTML = htmlInhalt || "<tr><td colspan='2' style='padding:8px;'>Kein Spieler gefunden.</td></tr>";
     } catch (error) {
         console.error(error);
@@ -261,22 +296,28 @@ async function ladeFortschritt() {
 // *-------------------- SPIELER LASTLOGIN --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("spieler-lastlogin-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("spieler-lastlogin-bereich").style.display = "none";
     document.getElementById("spieler-bereich").style.display = "block";
 });
 
 document.getElementById("spieler-lastlogin-btn").addEventListener("click", async () => {
+    // Tabelle laden
     const tabelleBody = document.getElementById("spieler-lastlogin-tabelle-body");
     tabelleBody.innerHTML = "<tr><td colspan='2' style='padding:8px;'>Lade Daten...</td></tr>";
 
     try {
+        // Alle Spieler von Datenbank laden
         alleSpieler = await fb.getAllDocuments("spieler");
+
+        // Tabellenvariable leeren
         let htmlInhalt = "";
 
         alleSpieler.forEach((spieler) => {
             if (spieler.spielerName) {
                 let lastLogin = "--.--.--, --:--:--"
                 
+                // Zeitstempel formatieren
                 if (spieler.lastLogin) {
                     lastLogin = new Date(spieler.lastLogin).toLocaleTimeString("de-DE", {
                         day: "2-digit",
@@ -288,6 +329,7 @@ document.getElementById("spieler-lastlogin-btn").addEventListener("click", async
                     });
                 }
                 
+                // Tabelle generieren
                 htmlInhalt += `
                     <tr>
                         <td style="padding: 8px;">${spieler.spielerName}</td> 
@@ -297,6 +339,7 @@ document.getElementById("spieler-lastlogin-btn").addEventListener("click", async
             }
         });
 
+        // Tabelle füllen
         tabelleBody.innerHTML = htmlInhalt || "<tr><td colspan='2' style='padding:8px;'>Keine Spieler gefunden.</td></tr>";
     } catch (error) {
         console.error(error);
@@ -312,28 +355,34 @@ document.getElementById("spieler-lastlogin-btn").addEventListener("click", async
 // *-------------------- SPIELER BEARBEITEN --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("spieler-bearbeiten-abort-btn").addEventListener("click", () => {
+    // Error Msg leeren
     document.getElementById("spieler-bearbeiten-error-msg").innerText = "";
+
+    // Bereiche umschalten
     document.getElementById("spieler-bearbeiten-bereich").style.display = "none";
     document.getElementById("spieler-bereich").style.display = "block";
 });
 
 document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click", async () => {
+    // Spieler Index aus Dropdown holen
     const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
-    const dropdownFrage = document.getElementById("spieler-bearbeiten-station");
-    const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
-
     const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler.value);
 
+    // Fragen des ausgewählten Spielers laden
     await fragenLaden(alleSpieler[auswahlIndex].aktiveEpisode);
 
-    dropdownFrage.innerHTML = "";
+    // Dropdown für Station füllen
+    const dropdownStation = document.getElementById("spieler-bearbeiten-station");
+    dropdownStation.innerHTML = "";
     alleFragen.forEach((frage, i) => {
         const opt = document.createElement("option");
         opt.value = i;
         opt.textContent = "Station " + (i+1);
-        dropdownFrage.appendChild(opt);
+        dropdownStation.appendChild(opt);
     });
 
+    // Dropdown für Episoden füllen
+    const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
     dropdownAktiveEpisode.innerHTML = "";
     for (let i = 1; i <= spielStatus.episodenAnzahl; i++) {
         const opt = document.createElement("option");
@@ -342,26 +391,25 @@ document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click"
         dropdownAktiveEpisode.appendChild(opt);
     };
 
+    // Dropdown für Episode auf Spieler einstellen
     const auswahlSpieler = alleSpieler[auswahlIndex];
     const spielerEpisode = auswahlSpieler.episoden[auswahlSpieler.aktiveEpisode];
-
     dropdownFrage.value = String(spielerEpisode.station -1);
     dropdownAktiveEpisode.value = String(auswahlSpieler.aktiveEpisode);
 });
 
 document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("change", async (event) => {
-    const dropdownFrage = document.getElementById("spieler-bearbeiten-station");
-
     const auswahlAktiveEpisode = event.target.value;
 
     await fragenLaden(auswahlAktiveEpisode);
 
-    dropdownFrage.innerHTML = "";
+    const dropdownStation = document.getElementById("spieler-bearbeiten-station");
+    dropdownStation.innerHTML = "";
     alleFragen.forEach((frage, i) => {
         const opt = document.createElement("option");
         opt.value = i;
         opt.textContent = "Station " + (i+1);
-        dropdownFrage.appendChild(opt);
+        dropdownStation.appendChild(opt);
     });
 });
 
