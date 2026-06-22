@@ -24,7 +24,7 @@
         <h2>Admin Bereich</h2>
         <button id="admin-freigabe-btn">Spiel freigeben</button>
         <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-station-btn">Station bearbeiten</button>
+        <button id="admin-episoden-btn">Episoden bearbeiten</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
         <button id="admin-news-btn">News Nachricht</button>
         <button id="admin-spieler-btn">Spieler anzeigen</button>
@@ -122,8 +122,14 @@
         <p id="news-error-msg" style="color:red;"></p>
     </div>
 
+    <div id="admin-episoden-bereich" class="bereich" style="display: none;">
+        <h2>Episoden bearbeiten</h2>
+        <button id="episoden-episoden-btn">Episoden bearbeiten</button>
+        <button id="episoden-station-btn">Stationen bearbeiten</button>
+        <button id="episoden-abort-btn">Zurück</button>
+    </div>
 
-    <div id="admin-station-bereich" class="bereich" style="display: none;">
+    <div id="episoden-station-bereich" class="bereich" style="display: none;">
         <h2>Staion bearbeiten</h2>
         <p class="beschreibung">Episode:</p>
         <select id="station-episode-laden"></select>
@@ -140,13 +146,30 @@
         <br><br><hr>
         <p>Speichern unter:</p>
         <p class="beschreibung">Episode:</p>
-        <input id="station-episode" type="number" min="1" inputmode="numeric" placeholder="Episode...">
+        <select id="station-episode"></select>
         <p class="beschreibung">Station:</p>
         <input id="station-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
         <button id="station-save-btn">Speichern</button>
         <button id="station-delete-btn">Löschen</button>
         <button id="station-abort-btn">Abbrechen</button>
         <p id="station-error-msg" style="color:red;"></p>
+    </div>
+
+    <div id="episoden-episoden-bereich" class="bereich" style="display: none;">
+        <h2>Episoden bearbeiten</h2>
+        <p class="beschreibung">Episode:</p>
+        <select id="episoden-episode-laden"></select>
+        <br><br><hr>
+        <p class="beschreibung">Name:</p>
+        <input id="episoden-bearbeiten-name" type="text" placeholder="Name...">
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="episoden-bearbeiten-aktiv" name="episodeAktiv" value="aktiv">
+            <label for="episoden-bearbeiten-aktiv">Episode aktiv</label>
+        </div>
+        <br><br><hr>
+        <button id="episoden-bearbeiten-save-btn">Speichern</button>
+        <button id="episoden-bearbeiten-abort-btn">Abbrechen</button>
+        <p id="episoden-error-msg" style="color:red;"></p>
     </div>
 
 

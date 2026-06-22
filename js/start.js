@@ -64,6 +64,16 @@ fb.onAuthChanged(async (user) => {
                     document.getElementById("start-admin-btn").style.display = "block";
                 }
 
+                // Neue Episode Knopf anzeigen
+                const neueEpisodeBtn = document.getElementById("start-neue-episode-btn");
+                const bekannteEpisoden = Object.keys(spielerInfo.episoden).length;
+                if (spielStatus.episodenAnzahl > bekannteEpisoden) {
+                    neueEpisodeBtn.innerText = `Episode ${bekannteEpisoden + 1} verfügbar`
+                    neueEpisodeBtn.style.display = "block";
+                } else {
+                    neueEpisodeBtn.style.display = "none";
+                }
+
                 // Dropdown für Episoden füllen
                 const dropdownEpisoden = document.getElementById("start-episoden");
                 dropdownEpisoden.innerHTML = "";
@@ -98,6 +108,44 @@ fb.onAuthChanged(async (user) => {
 document.getElementById("start-spiel-btn").addEventListener("click", () => {
     // Weiterleiten auf Spiel Seite
     window.location.href = "game.html";
+});
+
+
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- NEUE EPISODE BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+document.getElementById("start-neue-episode-btn").addEventListener("click", async () => {
+    // Episode zur Datenbank hinzufügen
+    try {
+        const indexEpisode = Object.keys(spielerInfo.episoden).length +1;
+        spielerInfo.episoden[indexEpisode] = { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() };
+
+        await fb.updateDocument("spieler", spielerUid, {
+            episoden: spielerInfo.episoden
+        });
+    } catch (error) {
+        console.log("Es ist ein Fehler beim hinzufügen der Episode aufgetreten:", error);
+    }
+
+    // Bereiche umschalten
+    document.getElementById("start-bereich").style.display = "none";
+    document.getElementById("neue-episode-bereich").style.display = "block";
+});
+
+document.getElementById("neue-episode-abort-btn").addEventListener("click", () => {
+    // Neue Episode Knopf anzeigen
+    if (spielStatus.episodenAnzahl > Object.keys(spielerInfo.episoden).length) {
+        document.getElementById("start-neue-episode-btn").style.display = "block";
+    } else {
+        document.getElementById("start-neue-episode-btn").style.display = "none";
+    }
+
+    // Bereiche umschalten
+    document.getElementById("neue-episode-bereich").style.display = "none";
+    document.getElementById("start-bereich").style.display = "block";
 });
 
 
