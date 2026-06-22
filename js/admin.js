@@ -85,7 +85,7 @@ async function ladeSpielstatus() {
         status.style.color = "#E74C3C";
     }
 
-    // Tpppfreigabe auswerten und anzeigen
+    // Tippfreigabe auswerten und anzeigen
     const statusTipp = document.getElementById("admin-status-tipp");
     if (spielStatus.tipps) {
         document.getElementById("admin-tipp-btn").innerText = "Tipps sperren";

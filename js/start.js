@@ -64,21 +64,21 @@ fb.onAuthChanged(async (user) => {
                     document.getElementById("start-admin-btn").style.display = "block";
                 }
 
-                // Neue Episode Knopf anzeigen
-                const neueEpisodeBtn = document.getElementById("start-neue-episode-btn");
-                const bekannteEpisoden = Object.keys(spielerInfo.episoden).length;
-                if (spielStatus.episodenAnzahl > bekannteEpisoden) {
-                    neueEpisodeBtn.innerText = `Episode ${bekannteEpisoden + 1} verfügbar`
-                    neueEpisodeBtn.style.display = "block";
-                } else {
-                    neueEpisodeBtn.style.display = "none";
-                }
-
-                // Dropdown für Episoden füllen
+                // Dropdown Episoden füllen
                 const dropdownEpisoden = document.getElementById("start-episoden");
+                const neueEpisodeBtn = document.getElementById("start-neue-episode-btn");
+                neueEpisodeBtn.style.display = "none";
                 dropdownEpisoden.innerHTML = "";
-                Object.entries(spielerInfo.episoden).forEach(([key]) => {
+                Object.entries(spielStatus.episodenKatalog).forEach(([key]) => {
+                    // Freigabe Check
+                    if (!spielStatus.episodenKatalog[key].globalAktiv) return;
+                    if (spielerInfo.episoden[key] === undefined) {
+                        // Neue Episode Knopf anzeigen
+                        neueEpisodeBtn.style.display = "block";
+                        return;
+                    }
                     if (!spielerInfo.episoden[key].aktiv) return;
+
                     const opt = document.createElement("option");
                     opt.value = key; 
                     opt.textContent = "Episode " + key;
@@ -117,32 +117,69 @@ document.getElementById("start-spiel-btn").addEventListener("click", () => {
 // *---------------------------------------------------------------------------------------------------------------------------------------
 // *-------------------- NEUE EPISODE BEREICH --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
-document.getElementById("start-neue-episode-btn").addEventListener("click", async () => {
-    // Episode zur Datenbank hinzufügen
-    try {
-        const indexEpisode = Object.keys(spielerInfo.episoden).length +1;
-        spielerInfo.episoden[indexEpisode] = { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() };
-
-        await fb.updateDocument("spieler", spielerUid, {
-            episoden: spielerInfo.episoden
-        });
-    } catch (error) {
-        console.log("Es ist ein Fehler beim hinzufügen der Episode aufgetreten:", error);
-    }
+document.getElementById("start-neue-episode-btn").addEventListener("click", () => {
+    // Dropdown Episoden füllen
+    const dropdownEpisoden = document.getElementById("neue-episoden-laden");
+    dropdownEpisoden.innerHTML = "";
+    Object.entries(spielStatus.episodenKatalog).forEach(([key]) => {
+        // Freigabe Check
+        if (!spielStatus.episodenKatalog[key].globalAktiv) return;
+        if (spielerInfo.episoden[key] === undefined) {
+            const opt = document.createElement("option");
+            opt.value = key; 
+            opt.textContent = "Episode " + key;
+            dropdownEpisoden.appendChild(opt);
+        }
+    });
+    dropdownEpisoden.value = "";
 
     // Bereiche umschalten
     document.getElementById("start-bereich").style.display = "none";
     document.getElementById("neue-episode-bereich").style.display = "block";
 });
 
-document.getElementById("neue-episode-abort-btn").addEventListener("click", () => {
-    // Neue Episode Knopf anzeigen
-    if (spielStatus.episodenAnzahl > Object.keys(spielerInfo.episoden).length) {
-        document.getElementById("start-neue-episode-btn").style.display = "block";
-    } else {
-        document.getElementById("start-neue-episode-btn").style.display = "none";
-    }
+document.getElementById("neue-episode-laden-btn").addEventListener("click", async () => {
+    // Episode zur Datenbank hinzufügen
+    try {
+        const neueEpisodeKey = document.getElementById("neue-episoden-laden").value;
 
+        // Neues Episoden Objekt lokal erstellen
+        spielerInfo.episoden[neueEpisodeKey] = { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() };
+
+        // Episoden Objekt in Datenbank schreiben
+        await fb.updateDocument("spieler", spielerUid, {
+            episoden: spielerInfo.episoden
+        });
+
+        // Dropdown Episoden neu füllen
+        const dropdownEpisoden = document.getElementById("start-episoden");
+        const neueEpisodeBtn = document.getElementById("start-neue-episode-btn");
+        neueEpisodeBtn.style.display = "none";
+        dropdownEpisoden.innerHTML = "";
+        Object.entries(spielStatus.episodenKatalog).forEach(([key]) => {
+            if (!spielStatus.episodenKatalog[key].globalAktiv) return;
+            if (spielerInfo.episoden[key] === undefined) {
+                // Neue Episode Knopf anzeigen
+                neueEpisodeBtn.style.display = "block";
+                return;
+            }
+            if (!spielerInfo.episoden[key].aktiv) return;
+
+            const opt = document.createElement("option");
+            opt.value = key; 
+            opt.textContent = "Episode " + key;
+            dropdownEpisoden.appendChild(opt);
+        });
+
+        // Bereiche umschalten
+        document.getElementById("neue-episode-bereich").style.display = "none";
+        document.getElementById("start-bereich").style.display = "block";
+    } catch (error) {
+        console.log("Es ist ein Fehler beim hinzufügen der Episode aufgetreten:", error);
+    }
+});
+
+document.getElementById("neue-episode-abort-btn").addEventListener("click", () => {
     // Bereiche umschalten
     document.getElementById("neue-episode-bereich").style.display = "none";
     document.getElementById("start-bereich").style.display = "block";

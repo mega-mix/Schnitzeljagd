@@ -2,3 +2,4 @@
 - Spieler sollen neue episoden laden
 - Benachrichtigung bei neuer Episode
 - Episoden Titel hinzufügen
+- Team modus umschalten, um Teams unterschiedliche Episoden zuzuteilen
