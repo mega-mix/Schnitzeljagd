@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="top-bar">
-        <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
+        <img id="top-logo" src="assets/icons/logo.png" alt="Logo">
         <div id="top-links">
             <button id="logout-btn">Logout</button>
             <a id="top-link" href="start.html">Startseite</a>
@@ -24,7 +24,7 @@
         <h2>Admin Bereich</h2>
         <button id="admin-freigabe-btn">Spiel freigeben</button>
         <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-fragen-btn">Fragen bearbeiten</button>
+        <button id="admin-station-btn">Station bearbeiten</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
         <button id="admin-news-btn">News Nachricht</button>
         <button id="admin-spieler-btn">Spieler anzeigen</button>
@@ -79,7 +79,7 @@
 
 
     <div id="spieler-bearbeiten-bereich" class="bereich" style="display: none;">
-        <h2 style="margin-top: 16px;">Spieler bearbeiten</h2>
+        <h2>Spieler bearbeiten</h2>
         <p class="beschreibung">Spielername:</p>
         <select id="spieler-bearbeiten-name"></select>
         <button id="spieler-bearbeiten-laden-btn">Laden</button>
@@ -104,6 +104,7 @@
 
 
     <div id="admin-nachricht-bereich" class="bereich" style="display: none;">
+        <h2>Admin Nachricht</h2>
         <textarea type="text" id="admin-nachricht" placeholder="Admin Nachricht..."></textarea>
         <br><br>
         <button id="nachricht-save-btn">Speichern</button>
@@ -113,6 +114,7 @@
 
 
     <div id="admin-news-bereich" class="bereich" style="display: none;">
+        <h2>News Nachricht</h2>
         <textarea type="text" id="admin-news" placeholder="News..."></textarea>
         <br><br>
         <button id="news-save-btn">Speichern</button>
@@ -121,25 +123,30 @@
     </div>
 
 
-    <div id="admin-fragen-bereich" class="bereich" style="display: none;">
+    <div id="admin-station-bereich" class="bereich" style="display: none;">
+        <h2>Staion bearbeiten</h2>
         <p class="beschreibung">Episode:</p>
-        <select id="fragen-episode-laden"></select>
+        <select id="station-episode-laden"></select>
         <p class="beschreibung">Station:</p>
-        <select id="fragen-station-laden"></select>
-        <button id="fragen-laden-btn">Laden</button>
+        <select id="station-station-laden"></select>
+        <button id="station-laden-btn">Laden</button>
         <br><br><hr>
         <p class="beschreibung">Frage:</p>
-        <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
+        <textarea id="station-frage" rows="5" placeholder="Frage..."></textarea>
         <p class="beschreibung">Antwort:</p>
-        <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
+        <textarea id="station-antwort" placeholder="Antwort..."></textarea>
+        <p class="beschreibung">Tipp:</p>
+        <textarea id="station-tipp" placeholder="Tipp..."></textarea>
+        <br><br><hr>
+        <p>Speichern unter:</p>
         <p class="beschreibung">Episode:</p>
-        <input id="fragen-episode" type="number" min="1" inputmode="numeric" placeholder="Episode...">
+        <input id="station-episode" type="number" min="1" inputmode="numeric" placeholder="Episode...">
         <p class="beschreibung">Station:</p>
-        <input id="fragen-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
-        <button id="fragen-save-btn">Speichern</button>
-        <button id="fragen-delete-btn">Löschen</button>
-        <button id="fragen-abort-btn">Abbrechen</button>
-        <p id="fragen-error-msg" style="color:red;"></p>
+        <input id="station-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
+        <button id="station-save-btn">Speichern</button>
+        <button id="station-delete-btn">Löschen</button>
+        <button id="station-abort-btn">Abbrechen</button>
+        <p id="station-error-msg" style="color:red;"></p>
     </div>
 
 

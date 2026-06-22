@@ -5,7 +5,6 @@ const fb = new FirebaseService();
 
 document.getElementById("version").innerText = APP_VERSION;
 
-let alleFragen = [];
 let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";

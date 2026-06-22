@@ -5,7 +5,7 @@ const fb = new FirebaseService();
 
 document.getElementById("version").innerText = APP_VERSION;
 
-let alleFragen = [];
+let alleStationen = [];
 let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
@@ -101,23 +101,24 @@ async function ladeSpielstatus() {
     }
 }
 
-document.getElementById("admin-fragen-btn").addEventListener("click", async () => {
+document.getElementById("admin-station-btn").addEventListener("click", async () => {
     // Stationen von Datenbank laden
     await stationenLaden(1);
 
     // Dropdown Station füllen
-    const dropdownStation = document.getElementById("fragen-station-laden");
+    const dropdownStation = document.getElementById("station-station-laden");
     dropdownStation.innerHTML = "";
-    alleFragen.forEach((frage, i) => {
+    alleStationen.forEach((station, i) => {
+        if (i === 0) return;
         const opt = document.createElement("option");
         opt.value = i;
-        opt.textContent = "Station " + (i+1);
+        opt.textContent = "Station " + (i);
         dropdownStation.appendChild(opt);
     });
-    dropdownStation.value = 0;
+    dropdownStation.value = 1;
 
     // Dropdown Episoden füllen
-    const dropdownEpisode = document.getElementById("fragen-episode-laden");
+    const dropdownEpisode = document.getElementById("station-episode-laden");
     dropdownEpisode.innerHTML = "";
     for (let i = 1; i <= spielStatus.episodenAnzahl; i++) {
         const opt = document.createElement("option");
@@ -129,7 +130,7 @@ document.getElementById("admin-fragen-btn").addEventListener("click", async () =
 
     // Bereiche umschalten
     document.getElementById("admin-bereich").style.display = "none";
-    document.getElementById("admin-fragen-bereich").style.display = "block";
+    document.getElementById("admin-station-bereich").style.display = "block";
 });
 
 document.getElementById("admin-nachricht-btn").addEventListener("click", async () => {
@@ -374,10 +375,11 @@ document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click"
     // Dropdown für Station füllen
     const dropdownStation = document.getElementById("spieler-bearbeiten-station");
     dropdownStation.innerHTML = "";
-    alleFragen.forEach((frage, i) => {
+    alleStationen.forEach((station, i) => {
+        if (i === 0) return;
         const opt = document.createElement("option");
         opt.value = i;
-        opt.textContent = "Station " + (i+1);
+        opt.textContent = "Station " + (i);
         dropdownStation.appendChild(opt);
     });
 
@@ -394,7 +396,7 @@ document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click"
     // Dropdown für Episode auf Spieler einstellen
     const auswahlSpieler = alleSpieler[auswahlIndex];
     const spielerEpisode = auswahlSpieler.episoden[auswahlSpieler.aktiveEpisode];
-    dropdownFrage.value = String(spielerEpisode.station -1);
+    dropdownStation.value = String(spielerEpisode.station);
     dropdownAktiveEpisode.value = String(auswahlSpieler.aktiveEpisode);
 });
 
@@ -407,7 +409,7 @@ document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("c
     // Dropdown der Stationen füllen
     const dropdownStation = document.getElementById("spieler-bearbeiten-station");
     dropdownStation.innerHTML = "";
-    alleFragen.forEach((frage, i) => {
+    alleStationen.forEach((station, i) => {
         const opt = document.createElement("option");
         opt.value = i;
         opt.textContent = "Station " + (i+1);
@@ -417,7 +419,7 @@ document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("c
 
 document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click", async () => {
     const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
-    const stationInput = parseInt(document.getElementById("spieler-bearbeiten-station").value)+1;
+    const stationInput = parseInt(document.getElementById("spieler-bearbeiten-station").value);
     const aktiveEpisodeInput = parseInt(document.getElementById("spieler-bearbeiten-aktive-episode").value);
     const antwortReset = document.getElementById("spieler-bearbeiten-antwort-reset").checked;
     const tippReset = document.getElementById("spieler-bearbeiten-tipp-reset").checked;
@@ -593,76 +595,79 @@ document.getElementById("news-save-btn").addEventListener("click", async () => {
 
 
 // *---------------------------------------------------------------------------------------------------------------------------------------
-// *-------------------- FRAGEN BEARBEITEN --------------------
+// *-------------------- STATION BEARBEITEN --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
-document.getElementById("fragen-abort-btn").addEventListener("click", () => {
+document.getElementById("station-abort-btn").addEventListener("click", () => {
     // Bereiche umschalten
-    document.getElementById("admin-fragen-bereich").style.display = "none";
+    document.getElementById("admin-station-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
 
     // GUI Felder leeren
-    document.getElementById("fragen-frage").value = "";
-    document.getElementById("fragen-antwort").value = "";
-    document.getElementById("fragen-nummer").value = "";
-    document.getElementById("fragen-error-msg").innerText = "";
-    document.getElementById("fragen-station-laden").value = 0;
+    document.getElementById("station-frage").value = "";
+    document.getElementById("station-antwort").value = "";
+    document.getElementById("station-tipp").value = "";
+    document.getElementById("station-nummer").value = "";
+    document.getElementById("station-error-msg").innerText = "";
+    document.getElementById("station-station-laden").value = 0;
 });
 
-document.getElementById("fragen-laden-btn").addEventListener("click", async () => {
-    const index = document.getElementById("fragen-station-laden").value;
-    const episode = document.getElementById("fragen-episode-laden").value;
-    const errorMsg = document.getElementById("fragen-error-msg");
+document.getElementById("station-laden-btn").addEventListener("click", async () => {
+    const index = document.getElementById("station-station-laden").value;
+    const episode = document.getElementById("station-episode-laden").value;
+    const errorMsg = document.getElementById("station-error-msg");
 
     // Laden Knopf sperren
-    const fragenLadenBtn = document.getElementById("fragen-laden-btn");
-    fragenLadenBtn.disabled = true;
-    fragenLadenBtn.innerText = "Bitte warten...";
+    const stationenLadenBtn = document.getElementById("station-laden-btn");
+    stationenLadenBtn.disabled = true;
+    stationenLadenBtn.innerText = "Bitte warten...";
 
     try {
         // Stationen zur Episode laden
         await stationenLaden(episode);
 
         // Stationsnummer prüfen
-        if (index >= alleFragen.length) {
+        if (index >= alleStationen.length) {
             // Weniger Stationen in Episode, als ausgewählte Stration
             errorMsg.innerText = "Diese Stations-Nummer existiert in dieser Episode nicht.";
             
             // GUI Felder leeren
-            document.getElementById("fragen-frage").value = "";
-            document.getElementById("fragen-antwort").value = "";
-            document.getElementById("fragen-nummer").value = "";
-            document.getElementById("fragen-episode").value = "";
+            document.getElementById("station-frage").value = "";
+            document.getElementById("station-antwort").value = "";
+            document.getElementById("station-tipp").value = "";
+            document.getElementById("station-nummer").value = "";
+            document.getElementById("station-episode").value = "";
 
             // Abbruch
             return;
         }
 
         // GUI Felder mit Daten füllen
-        document.getElementById("fragen-frage").value = alleFragen[index].frage;
-        document.getElementById("fragen-antwort").value = alleFragen[index].antwort;
-        document.getElementById("fragen-nummer").value = parseFloat(index) +1;
-        document.getElementById("fragen-episode").value = episode;
+        document.getElementById("station-frage").value = alleStationen[index].frage;
+        document.getElementById("station-antwort").value = alleStationen[index].antwort;
+        document.getElementById("station-tipp").value = alleStationen[index].tipp1;
+        document.getElementById("station-nummer").value = parseFloat(index) +1;
+        document.getElementById("station-episode").value = episode;
         errorMsg.innerText = "";
     } catch (error) {
         console.error(error);
-        errorMsg.innerText = "Fehler beim Laden der Fragen aus der Datenbank.";
+        errorMsg.innerText = "Fehler beim Laden der Stationen aus der Datenbank.";
     } finally {
         // Laden Knopf freigeben
-        fragenLadenBtn.disabled = false;
-        fragenLadenBtn.innerText = "Laden";
+        stationenLadenBtn.disabled = false;
+        stationenLadenBtn.innerText = "Laden";
     }
 });
 
-document.getElementById("fragen-episode-laden").addEventListener("change", async (event) => {
+document.getElementById("station-episode-laden").addEventListener("change", async (event) => {
     const auswahlEpisode = event.target.value;
 
     // Stationen aus Datenbank laden
     await stationenLaden(auswahlEpisode);
 
     // Dropdown Stationen füllen
-    const dropdownStation = document.getElementById("fragen-station-laden");
+    const dropdownStation = document.getElementById("station-station-laden");
     dropdownStation.innerHTML = "";
-    alleFragen.forEach((frage, i) => {
+    alleStationen.forEach((station, i) => {
         const opt = document.createElement("option");
         opt.value = i;
         opt.textContent = "Station " + (i+1);
@@ -670,23 +675,24 @@ document.getElementById("fragen-episode-laden").addEventListener("change", async
     });
 });
 
-document.getElementById("fragen-save-btn").addEventListener("click", async () => {
-    const frageInput = document.getElementById("fragen-frage").value;
-    const antwortInput = document.getElementById("fragen-antwort").value;
-    const indexInput = document.getElementById("fragen-nummer").value;
-    const episodeInput = document.getElementById("fragen-episode").value;
-    const errorMsg = document.getElementById("fragen-error-msg");
+document.getElementById("station-save-btn").addEventListener("click", async () => {
+    const frageInput = document.getElementById("station-frage").value;
+    const antwortInput = document.getElementById("station-antwort").value;
+    const tippInput = document.getElementById("station-tipp").value;
+    const indexInput = document.getElementById("station-nummer").value;
+    const episodeInput = document.getElementById("station-episode").value;
+    const errorMsg = document.getElementById("station-error-msg");
 
-    // Eingaben auf Vollständigkeit prüfen
+    // Eingaben auf Vollständigkeit prüfen (Tipp optional)
     if (!frageInput || !antwortInput || !indexInput) {
         errorMsg.innerText = "Bitte Frage, Antwort und Index angeben!";
         return;
     }
 
     // Speicher Knopf sperren
-    const fragenSaveBtn = document.getElementById("fragen-save-btn");
-    fragenSaveBtn.disabled = true;
-    fragenSaveBtn.innerText = "Bitte warten...";
+    const stationenSaveBtn = document.getElementById("station-save-btn");
+    stationenSaveBtn.disabled = true;
+    stationenSaveBtn.innerText = "Bitte warten...";
 
     // Fehlermeldung leeren
     errorMsg.innerText = "";
@@ -694,7 +700,8 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
     // Objekt für Station erstellen
     const neueStation = {
         frage: frageInput,
-        antwort: antwortInput
+        antwort: antwortInput,
+        tipp1: tippInput
     };
 
     // Dateiname Episode für Datenbank erstellen
@@ -715,39 +722,39 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
         errorMsg.innerText = "Fehler beim speichern der Daten.";
     } finally {
         // Speicher Knopf freigeben
-        if (fragenSaveBtn) {
-            fragenSaveBtn.disabled = false;
-            fragenSaveBtn.innerText = "Speichern";
+        if (stationenSaveBtn) {
+            stationenSaveBtn.disabled = false;
+            stationenSaveBtn.innerText = "Speichern";
         }
     }
     
 });
 
-document.getElementById("fragen-delete-btn").addEventListener("click", async () => {
-    const indexInput = document.getElementById("fragen-nummer").value;
-    const episodeInput = document.getElementById("fragen-episode").value;
-    const errorMsg = document.getElementById("fragen-error-msg");
+document.getElementById("station-delete-btn").addEventListener("click", async () => {
+    const indexInput = document.getElementById("station-nummer").value;
+    const episodeInput = document.getElementById("station-episode").value;
+    const errorMsg = document.getElementById("station-error-msg");
 
     // Input prüfen
     if (!indexInput) {
-        errorMsg.innerText = "Bitte Fragennummer zum löschen angeben!";
+        errorMsg.innerText = "Bitte Stationsnummer zum löschen angeben!";
         return;
     }
 
     // Löschen Knopf sperren
-    const fragenDeleteBtn = document.getElementById("fragen-delete-btn");
-    fragenDeleteBtn.disabled = true;
-    fragenDeleteBtn.innerText = "Bitte warten";
+    const stationenDeleteBtn = document.getElementById("station-delete-btn");
+    stationenDeleteBtn.disabled = true;
+    stationenDeleteBtn.innerText = "Bitte warten";
 
     // Fehlermeldung leeren
     errorMsg.innerText = "";
 
     // Popup zur Bestätigung öffnen
-    const entscheidung = confirm(`Möchten Sie die Frage ${indexInput} wirklich löschen?`);
+    const entscheidung = confirm(`Möchten Sie die Station ${indexInput} wirklich löschen?`);
     if (!entscheidung) return;
 
     // Dateiname der Episode erstellen
-    const episodePath = "fragen" + episodeInput;
+    const episodePath = "episode" + episodeInput;
 
     try {
         // Prüfen ob Station existiert
@@ -765,9 +772,9 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
         errorMsg.innerText = "Fehler beim löschen der Daten.";
     } finally {
         // Löschen Knopf freigeben
-        if (fragenDeleteBtn) {
-            fragenDeleteBtn.disabled = false;
-            fragenDeleteBtn.innerText = "Löschen";
+        if (stationenDeleteBtn) {
+            stationenDeleteBtn.disabled = false;
+            stationenDeleteBtn.innerText = "Löschen";
         }
     }
 });
@@ -778,14 +785,14 @@ async function stationenLaden(episode) {
         const episodePath = "episode" + episode;
 
         // Alle Stationen laden
-        const geladeneFragen = await fb.getAllDocuments(episodePath);
+        const geladeneStationen = await fb.getAllDocuments(episodePath);
 
         // Stationen in Array sortiern
-        alleFragen = geladeneFragen.sort((a, b) => {
+        alleStationen = geladeneStationen.sort((a, b) => {
             return a.id.localeCompare(b.id, undefined, { numeric: true });
         });
     } catch (error) {
-        console.error("Fehler beim Laden der Fragen:", error);
+        console.error("Fehler beim Laden der Stationen:", error);
     }
 }
 
