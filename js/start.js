@@ -21,22 +21,30 @@ let authInitialisiert = false;
 
 fb.onAuthChanged(async (user) => {
     if (authInitialisiert && !user) {
+        // Bei zweitem Aufruf und ohne user, zurück zur Login Seite
         window.location.href = "index.html";
         return;
     }
     
+    // Ersten Aufruf speichern
     authInitialisiert = true;
 
     if (user) {
+        // Spieler UID speichern
         spielerUid = user.uid;
 
         try {
+            // Spielerinfo von Datenbank laden
             spielerInfo = await fb.getSpielerInfo(spielerUid);
+
             if (spielerInfo) {
+                // Spielstatus von Datenbank laden
                 spielStatus = await fb.getSpielStatus();
 
+                // GUI Begrüßung schreiben
                 document.getElementById("start-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
 
+                // Admin Nachricht visualisieren
                 document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
                 if (spielStatus.adminNachricht !== "") {
                     document.getElementById("admin-nachricht-display").style.display = "block";
@@ -44,6 +52,7 @@ fb.onAuthChanged(async (user) => {
                     document.getElementById("admin-nachricht-display").style.display = "none";
                 }
 
+                // News Nachricht visualisieren
                 document.getElementById("news-nachricht").innerText = spielStatus.news;
                 if (spielStatus.news !== "") {
                     document.getElementById("news-nachricht-display").style.display = "block";
@@ -51,10 +60,12 @@ fb.onAuthChanged(async (user) => {
                     document.getElementById("news-nachricht-display").style.display = "none";
                 }
 
+                // Admin Knopf anzeigen
                 if (spielerInfo.spielerName === "admin") {
                     document.getElementById("start-admin-btn").style.display = "block";
                 }
 
+                // Dropdown für Episoden füllen
                 const dropdownEpisoden = document.getElementById("start-episoden");
                 dropdownEpisoden.innerHTML = "";
                 Object.entries(spielerInfo.episoden).forEach(([key]) => {
@@ -66,6 +77,7 @@ fb.onAuthChanged(async (user) => {
                 });
                 dropdownEpisoden.value = spielerInfo.aktiveEpisode;
 
+                // Bereich einblenden
                 document.getElementById("start-bereich").style.display = "block";
             }
         } catch (error) {
@@ -84,7 +96,10 @@ fb.onAuthChanged(async (user) => {
 // *---------------------------------------------------------------------------------------------------------------------------------------
 // *-------------------- SPIEL BUTTON --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
-document.getElementById("start-spiel-btn").addEventListener("click", () => window.location.href = "game.html");
+document.getElementById("start-spiel-btn").addEventListener("click", () => {
+    // Weiterleiten auf Spiel Seite
+    window.location.href = "game.html";
+});
 
 
 
@@ -93,7 +108,10 @@ document.getElementById("start-spiel-btn").addEventListener("click", () => windo
 // *---------------------------------------------------------------------------------------------------------------------------------------
 // *-------------------- ADMIN BUTTON --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
-document.getElementById("start-admin-btn").addEventListener("click", () => window.location.href = "admin.html");
+document.getElementById("start-admin-btn").addEventListener("click", () => {
+    // Weiterleiten auf Admin Seite
+    window.location.href = "admin.html";
+});
 
 
 
@@ -105,9 +123,11 @@ document.getElementById("start-admin-btn").addEventListener("click", () => windo
 document.getElementById("start-episoden").addEventListener("change", async (event) => {
     const auswahlEpisode = parseFloat(event.target.value);
 
+    // Episode in Spieler Info aktualisieren
     spielerInfo.aktiveEpisode = auswahlEpisode;
 
     try {
+        // Neue Episode in Datenbank schreiben
         await fb.updateDocument("spieler", spielerUid, {
             aktiveEpisode: spielerInfo.aktiveEpisode
         });
@@ -125,7 +145,10 @@ document.getElementById("start-episoden").addEventListener("change", async (even
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
+        // Abmelden von Datenbank
         await fb.auth.signOut();
+
+        // Weiterleiten zur Login Seite
         window.location.href = "index.html";
     } catch (error) {
         console.error("Fehler beim Logout:", error);

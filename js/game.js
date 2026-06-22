@@ -22,27 +22,37 @@ let authInitialisiert = false;
 
 fb.onAuthChanged(async (user) => {
     if (authInitialisiert && !user) {
+        // Bei zweitem Aufruf und ohne user, zurück zur Login Seite
         window.location.href = "index.html";
         return;
     }
 
+    // Ersten Aufruf speichern
     authInitialisiert = true;
 
     if (user) {
+        // Spieler UID speichern
         spielerUid = user.uid;
 
         try {
+            // Spielerinfo von Datenbank laden
             spielerInfo = await fb.getSpielerInfo(spielerUid);
+
             if (spielerInfo) {
-                await fragenLaden(spielerInfo.aktiveEpisode);
+                // Stationen Laden
+                await stationenLaden(spielerInfo.aktiveEpisode);
+
+                // Frage darstellen
                 await zeigeFrage();
             } else {
+                // Weiterleiten zur Login Seite
                 windows.location.href = "index.html";
             }
         } catch (error) {
             console.error("Fehler bei der Auth-Initialisierung:", error);
         }
     } else {
+        // Weiterleiten zur Login Seite
         window.location.href = "index.html";
     }
 });
@@ -61,46 +71,62 @@ async function zeigeFrage() {
     const spielTippBtn = document.getElementById("spiel-tipp-btn");
 
     try {
+        // Spielstatus von Datenbank laden
         spielStatus = await fb.getSpielStatus();
+
+        // Spieler Info von Datenbank laden
         const neueSpielerInfo = await fb.getSpielerInfo(spielerUid);
 
+        // Erfolgsprüfung
         if (!neueSpielerInfo || !spielStatus) return;
 
+        // Falls Episode geändert wurde, Stationen aus Datenbank laden
         if (spielerInfo.aktiveEpisode !== neueSpielerInfo.aktiveEpisode) {
-            await fragenLaden(neueSpielerInfo.aktiveEpisode);
+            await stationenLaden(neueSpielerInfo.aktiveEpisode);
         }
 
+        // Geladene Spielerinfo in Speicher schreiben
         spielerInfo = neueSpielerInfo;
 
+        // GUI Begrüßung anzeigen
         document.getElementById("spiel-begruessung").innerText = `Hallo ${spielerInfo.spielerName}`;
-        document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
 
+        // Admin Nachricht anzeigen
+        document.getElementById("admin-nachricht-display").innerText = spielStatus.adminNachricht;
         if (spielStatus.adminNachricht !== "") {
             document.getElementById("admin-nachricht-display").style.display = "block";
         } else {
             document.getElementById("admin-nachricht-display").style.display = "none";
         }
     
+        // Variablen vereinfachen
         const keyEpisode = spielerInfo.aktiveEpisode;
         const spielerEpisode = spielerInfo.episoden[keyEpisode];
         const indexStation = spielerInfo.episoden[keyEpisode].station -1;
 
-        // Tipp 1 anzeigen oder nicht
+        // Auswerten ob Tipp angezeigt wird
         const indexTipp = spielerInfo.episoden[keyEpisode].tipps.findIndex(tp => tp.station === spielerInfo.episoden[keyEpisode].station);
         if (indexTipp >= 0) {
+            // Tipp wurde schon angezeigt, dann wieder zeigen
             const tippNr = spielerInfo.episoden[keyEpisode].tipps[indexTipp].tippNr;
             switch (tippNr) {
                 case 1:
+                    // Tipp Knopf sperren
                     spielTippBtn.disabled = true;
+
+                    // Tipp anzeigen
                     spielTipp.innerText = alleFragen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
                     break;
             }
         } else {
+            // Tipp Knopf freigeben und Tipp leeren
             spielTippBtn.disabled = false;
             spielTipp.innerText = "";
         }
 
+        // Auswerten ob Spiel freigegeben ist
         if (!spielStatus.freigegeben) {
+            // Spiel nicht freigegeben, GUI generieren
             container.innerHTML = `
                 <p>Station ${spielerEpisode.station}</p>
                 <h3>Das Spiel ist aktuell pausiert.</h3>
@@ -110,12 +136,16 @@ async function zeigeFrage() {
             document.getElementById("spiel-tipp-container").style.display = "none";
         }
         else if (spielerEpisode.station <= alleFragen.length) {
+            // Spiel freigegeben, und fortschritt noch nicht am Ende
+
+            // Tipp anzeigen
             if (spielStatus.tipps) {
                 document.getElementById("spiel-tipp-container").style.display = "block";
             } else {
                 document.getElementById("spiel-tipp-container").style.display = "none";
             }
 
+            // GUI zur Frage generieren
             container.innerHTML = `
                 <p>Station ${spielerEpisode.station }</p>
                 <p>${alleFragen[spielerEpisode.station-1].frage}</p>
@@ -125,10 +155,12 @@ async function zeigeFrage() {
             `;
         }
         else {
+            // Spiel Ende Nachricht anzeigen
             container.innerHTML = `<h3>Glückwunsch! Die Suche wurde erfolgreich gemeistert! 🎉</h3>`;
             document.getElementById("spiel-tipp-container").style.display = "none";
         }
 
+        // Bereich anzeigen
         spielBereich.style.display = "block";
     } catch (error) {
         console.error("Fehler beim Live-Laden der Station:", error);
@@ -162,7 +194,6 @@ async function pruefeAntwort() {
         spielerInfo.episoden[keyEpisode].antworten = spielerInfo.episoden[keyEpisode].antworten.shift();
     }
     spielerInfo.episoden[keyEpisode].antworten.push(antwortObj);
-
     spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();
 
     // Auswertung
@@ -178,7 +209,7 @@ async function pruefeAntwort() {
         // Station hochzählen
         spielerInfo.episoden[keyEpisode].station++;
 
-        // Daten speichern
+        // Daten in Datenbank schreiben
         try {
             await fb.updateDocument("spieler", spielerUid, {
                 [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
@@ -187,6 +218,8 @@ async function pruefeAntwort() {
         } catch (error) {
             console.error(error);
             feedback.innerText = "Fehler beim Speichern der Station.";
+
+            // Antwort Knopf freigeben
             if (antwortBtn) {
                 antwortBtn.disabled = false;
                 antwortBtn.innerText = "Antwort senden";
@@ -210,7 +243,7 @@ async function pruefeAntwort() {
             antwortBtn.disabled = true;
         }
 
-        // Daten speichern
+        // Daten in Datenbank schreiben
         try {
             await fb.updateDocument("spieler", spielerUid, {
                 [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
@@ -229,11 +262,15 @@ async function pruefeAntwort() {
     }
 }
 
-async function fragenLaden(episode) {
+async function stationenLaden(episode) {
     try {
+        // Dateinamen erstellen
         const episodePath = "episode" + episode;
+
+        // Alle Stationen aus Datenbank laden
         const geladeneFragen = await fb.getAllDocuments(episodePath);
 
+        // Stationen in Array sortieren
         alleFragen = geladeneFragen.sort((a, b) => {
             return a.id.localeCompare(b.id, undefined, { numeric: true });
         });
@@ -250,13 +287,15 @@ async function fragenLaden(episode) {
 // *-------------------- GLOBALER KLICK-WATCHER --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.addEventListener("click", async (event) => {
-    // 1. Abfangen des dynamischen Antwort-Buttons
+    // Abfangen des dynamischen Antwort-Buttons
     if (event.target && event.target.id === "antwort-btn") {
+        // Antwort prüfen
         await pruefeAntwort();
     }
     
-    // 2. Abfangen des dynamischen Pausen-Aktualisieren-Buttons
+    // Abfangen des dynamischen Pausen-Aktualisieren-Buttons
     if (event.target && event.target.id === "status-btn") {
+        // Seite aktualisieren
         location.reload();
     }
 });
@@ -282,7 +321,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     // Abbruch bei fehlerhaften Werten
     if (spielerInfo.episoden[keyEpisode].station === undefined || spielerInfo.episoden[keyEpisode].station > alleFragen.length) return;
 
-    // Tipp Knopf deaktivieren
+    // Tipp Knopf sperren
     if (tippBtn) tippBtn.disabled = true;
 
     // Tipp in Array sichern
@@ -299,7 +338,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     // Zeitstempel generieren
     spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();
 
-    // Daten speichern
+    // Daten in Datenbank schreiben
     try {
         await fb.updateDocument("spieler", spielerUid, {
             [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
@@ -307,6 +346,8 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     } catch (error) {
         console.error(error);
         if (spielTipp) spielTipp.innerText = "Fehler beim Speichern der Tipps.";
+
+        // Tipp Knopf freigeben
         if (tippBtn) tippBtn.disabled = false;
     }
 });
@@ -320,7 +361,10 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
+        // Abmeldung von Datenbank
         await fb.auth.signOut();
+
+        // Weiterleiten zur Login Seite
         window.location.href = "index.html";
     } catch (error) {
         console.error("Fehler beim Logout:", error);

@@ -102,8 +102,8 @@ async function ladeSpielstatus() {
 }
 
 document.getElementById("admin-fragen-btn").addEventListener("click", async () => {
-    // Fragen von Datenbank laden
-    await fragenLaden(1);
+    // Stationen von Datenbank laden
+    await stationenLaden(1);
 
     // Dropdown Station füllen
     const dropdownStation = document.getElementById("fragen-station-laden");
@@ -368,8 +368,8 @@ document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click"
     const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
     const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler.value);
 
-    // Fragen des ausgewählten Spielers laden
-    await fragenLaden(alleSpieler[auswahlIndex].aktiveEpisode);
+    // Stationen des ausgewählten Spielers laden
+    await stationenLaden(alleSpieler[auswahlIndex].aktiveEpisode);
 
     // Dropdown für Station füllen
     const dropdownStation = document.getElementById("spieler-bearbeiten-station");
@@ -401,8 +401,10 @@ document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click"
 document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("change", async (event) => {
     const auswahlAktiveEpisode = event.target.value;
 
-    await fragenLaden(auswahlAktiveEpisode);
+    // Stationen zur ausgewählten Episode laden
+    await stationenLaden(auswahlAktiveEpisode);
 
+    // Dropdown der Stationen füllen
     const dropdownStation = document.getElementById("spieler-bearbeiten-station");
     dropdownStation.innerHTML = "";
     alleFragen.forEach((frage, i) => {
@@ -421,51 +423,67 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
     const tippReset = document.getElementById("spieler-bearbeiten-tipp-reset").checked;
     const errorMsg = document.getElementById("spieler-bearbeiten-error-msg");
 
+    // Prüfung auf Vollständigkeit
     if (isNaN(stationInput) || isNaN(aktiveEpisodeInput)) {
+        //Abbruch bei Fehlern
         errorMsg.innerText = "Bitte alle Felder ausfüllen.";
         return;
     } else {
+        // Speichern Knopf deaktivieren
         const bearbeitenSaveBtn = document.getElementById("spieler-bearbeiten-save-btn");
         bearbeitenSaveBtn.disabled = true;
         bearbeitenSaveBtn.innerText = "Bitte warten...";
 
+        // Daten in Datenbank schreiben
         try {
+            // Alle Spieler laden und markierten suchen
             alleSpieler = await fb.getAllDocuments("spieler");
             const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
-
-            const episoden = gefundeneSpieler.episoden;
-
-            episoden[aktiveEpisodeInput].station = stationInput;
-            if (antwortReset) episoden[aktiveEpisodeInput].antworten = [];
-            if (tippReset) episoden[aktiveEpisodeInput].tipps = [];
-            episoden[aktiveEpisodeInput].zeitstempel = Date.now();
             
+            // Sicherheitsprüfung
             if (gefundeneSpieler) {
                 if (stationInput >= 1) {
+                    // Episode des Spielers holen
+                    const episoden = gefundeneSpieler.episoden;
+
+                    // Neue Werte übernehmen
+                    episoden[aktiveEpisodeInput].station = stationInput;
+                    if (antwortReset) episoden[aktiveEpisodeInput].antworten = [];
+                    if (tippReset) episoden[aktiveEpisodeInput].tipps = [];
+                    episoden[aktiveEpisodeInput].zeitstempel = Date.now();
+
+                    // Daten in Datenbank schreiben
                     await fb.updateDocument("spieler", gefundeneSpieler.id, {
                         aktiveEpisode: aktiveEpisodeInput,
                         episoden: episoden
                     });
                 }
 
+                // GUI zurücksetzen
                 document.getElementById("spieler-bearbeiten-name").value = "";
                 document.getElementById("spieler-bearbeiten-station").value = "";
                 document.getElementById("spieler-bearbeiten-aktive-episode").value = "";
                 document.getElementById("spieler-bearbeiten-antwort-reset").checked = false;
                 document.getElementById("spieler-bearbeiten-tipp-reset").checked = false;
                 errorMsg.innerText = "";
+
+                // Bereiche umschalten
                 document.getElementById("spieler-bearbeiten-bereich").style.display = "none";
                 document.getElementById("spieler-bereich").style.display = "block";
 
+                // Speicher Knopf freigeben
                 bearbeitenSaveBtn.disabled = false;
                 bearbeitenSaveBtn.innerText = "Speichern";
             } else {
+                // Fehler falls Spieler nicht geladen wurde
                 errorMsg.innerText = "Spielername nicht gefunden.";
                 return;
             }
         } catch (error) {
             console.error(error);
             errorMsg.innerText = "Fehler beim Speichern der Daten.";
+
+            // Speicher Knopf freigeben
             bearbeitenSaveBtn.disabled = false;
             bearbeitenSaveBtn.innerText = "Speichern";
         }
@@ -480,6 +498,7 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
 // *-------------------- ADMIN NACHRICHT BEREICH --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("nachricht-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("admin-nachricht-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
 });
@@ -488,23 +507,33 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
     const nachrichtInput = document.getElementById("admin-nachricht").value.trim();
     const errorMsg = document.getElementById("nachrichten-error-msg");
 
+    // Speicher Knopf sperren
     const nachrichtSaveBtn = document.getElementById("nachricht-save-btn");
     nachrichtSaveBtn.disabled = true;
     nachrichtSaveBtn.innerText = "Bitte warten";
 
-    try {
-        await fb.setzeAdminNachricht(nachrichtInput);
+    // Fehlermeldung zurücksetzen
+    errorMsg.innerText = "";
 
-        errorMsg.innerText = "";
+    try {
+        // Daten in Datenbank schreiben
+        await fb.setzeAdminNachricht(nachrichtInput);
+        
+        // Bereiche umschalten
         document.getElementById("admin-nachricht-bereich").style.display = "none";
         document.getElementById("admin-bereich").style.display = "block";
+
+        // Spielstatus aus Datenbank laden
         ladeSpielstatus();
 
+        // Speicher Knopf freigeben
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
     } catch (error) {
         console.error(error);
         errorMsg.innerText = "Fehler beim Speichern der Daten.";
+
+        // Speicher Knopf freigeben
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
     }
@@ -518,6 +547,7 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
 // *-------------------- ADMIN NEWS BEREICH --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("news-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("admin-news-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
 });
@@ -526,23 +556,33 @@ document.getElementById("news-save-btn").addEventListener("click", async () => {
     const nachrichtInput = document.getElementById("admin-news").value.trim();
     const errorMsg = document.getElementById("news-error-msg");
 
+    // Speicher Knopf sperren
     const nachrichtSaveBtn = document.getElementById("news-save-btn");
     nachrichtSaveBtn.disabled = true;
     nachrichtSaveBtn.innerText = "Bitte warten";
 
-    try {
-        await fb.setzeAdminNews(nachrichtInput);
+    // Fehlermeldung zurücksetzen
+    errorMsg.innerText = "";
 
-        errorMsg.innerText = "";
+    try {
+        // Speichern in Datenbank
+        await fb.setzeAdminNews(nachrichtInput);
+ 
+        // Bereiche umschalten
         document.getElementById("admin-news-bereich").style.display = "none";
         document.getElementById("admin-bereich").style.display = "block";
+
+        // Spielstatus neu laden
         ladeSpielstatus();
 
+        // Speicher Knopf freigeben
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
     } catch (error) {
         console.error(error);
         errorMsg.innerText = "Fehler beim Speichern der News.";
+
+        // Speicherknopf freigeben
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
     }
@@ -556,8 +596,11 @@ document.getElementById("news-save-btn").addEventListener("click", async () => {
 // *-------------------- FRAGEN BEARBEITEN --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("fragen-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
     document.getElementById("admin-fragen-bereich").style.display = "none";
     document.getElementById("admin-bereich").style.display = "block";
+
+    // GUI Felder leeren
     document.getElementById("fragen-frage").value = "";
     document.getElementById("fragen-antwort").value = "";
     document.getElementById("fragen-nummer").value = "";
@@ -570,23 +613,31 @@ document.getElementById("fragen-laden-btn").addEventListener("click", async () =
     const episode = document.getElementById("fragen-episode-laden").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
+    // Laden Knopf sperren
     const fragenLadenBtn = document.getElementById("fragen-laden-btn");
     fragenLadenBtn.disabled = true;
     fragenLadenBtn.innerText = "Bitte warten...";
 
     try {
-        await fragenLaden(episode);
+        // Stationen zur Episode laden
+        await stationenLaden(episode);
 
+        // Stationsnummer prüfen
         if (index >= alleFragen.length) {
+            // Weniger Stationen in Episode, als ausgewählte Stration
             errorMsg.innerText = "Diese Stations-Nummer existiert in dieser Episode nicht.";
             
+            // GUI Felder leeren
             document.getElementById("fragen-frage").value = "";
             document.getElementById("fragen-antwort").value = "";
             document.getElementById("fragen-nummer").value = "";
             document.getElementById("fragen-episode").value = "";
+
+            // Abbruch
             return;
         }
 
+        // GUI Felder mit Daten füllen
         document.getElementById("fragen-frage").value = alleFragen[index].frage;
         document.getElementById("fragen-antwort").value = alleFragen[index].antwort;
         document.getElementById("fragen-nummer").value = parseFloat(index) +1;
@@ -596,24 +647,26 @@ document.getElementById("fragen-laden-btn").addEventListener("click", async () =
         console.error(error);
         errorMsg.innerText = "Fehler beim Laden der Fragen aus der Datenbank.";
     } finally {
+        // Laden Knopf freigeben
         fragenLadenBtn.disabled = false;
         fragenLadenBtn.innerText = "Laden";
     }
 });
 
 document.getElementById("fragen-episode-laden").addEventListener("change", async (event) => {
-    const dropdownFrage = document.getElementById("fragen-station-laden");
-
     const auswahlEpisode = event.target.value;
 
-    await fragenLaden(auswahlEpisode);
+    // Stationen aus Datenbank laden
+    await stationenLaden(auswahlEpisode);
 
-    dropdownFrage.innerHTML = "";
+    // Dropdown Stationen füllen
+    const dropdownStation = document.getElementById("fragen-station-laden");
+    dropdownStation.innerHTML = "";
     alleFragen.forEach((frage, i) => {
         const opt = document.createElement("option");
         opt.value = i;
         opt.textContent = "Station " + (i+1);
-        dropdownFrage.appendChild(opt);
+        dropdownStation.appendChild(opt);
     });
 });
 
@@ -624,35 +677,44 @@ document.getElementById("fragen-save-btn").addEventListener("click", async () =>
     const episodeInput = document.getElementById("fragen-episode").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
+    // Eingaben auf Vollständigkeit prüfen
     if (!frageInput || !antwortInput || !indexInput) {
         errorMsg.innerText = "Bitte Frage, Antwort und Index angeben!";
         return;
     }
 
+    // Speicher Knopf sperren
     const fragenSaveBtn = document.getElementById("fragen-save-btn");
     fragenSaveBtn.disabled = true;
     fragenSaveBtn.innerText = "Bitte warten...";
 
-    const neueFrage = {
+    // Fehlermeldung leeren
+    errorMsg.innerText = "";
+
+    // Objekt für Station erstellen
+    const neueStation = {
         frage: frageInput,
         antwort: antwortInput
     };
 
+    // Dateiname Episode für Datenbank erstellen
     const episodePath = "episode" + episodeInput;
 
     try {
+        // Prüfen ob die Station existiert
         const checkExists = await fb.getDocument(episodePath, indexInput.toString());
         if (checkExists !== null) {
-            await fb.updateDocument(episodePath, indexInput.toString(), neueFrage);
+            // Station existiert, update
+            await fb.updateDocument(episodePath, indexInput.toString(), neueStation);
         } else {
-            await fb.createDocument(episodePath, indexInput.toString(), neueFrage);
+            // Station existiert nicht, neu anlegen
+            await fb.createDocument(episodePath, indexInput.toString(), neueStation);
         }
-
-        errorMsg.innerText = "";
     } catch (error) {
         console.error("Daten werden nicht gespeichert:", error);
         errorMsg.innerText = "Fehler beim speichern der Daten.";
     } finally {
+        // Speicher Knopf freigeben
         if (fragenSaveBtn) {
             fragenSaveBtn.disabled = false;
             fragenSaveBtn.innerText = "Speichern";
@@ -666,47 +728,59 @@ document.getElementById("fragen-delete-btn").addEventListener("click", async () 
     const episodeInput = document.getElementById("fragen-episode").value;
     const errorMsg = document.getElementById("fragen-error-msg");
 
+    // Input prüfen
     if (!indexInput) {
-        errorMsg.innerText = "Bitte Index zum löschen angeben!";
+        errorMsg.innerText = "Bitte Fragennummer zum löschen angeben!";
         return;
     }
 
+    // Löschen Knopf sperren
     const fragenDeleteBtn = document.getElementById("fragen-delete-btn");
     fragenDeleteBtn.disabled = true;
     fragenDeleteBtn.innerText = "Bitte warten";
 
+    // Fehlermeldung leeren
+    errorMsg.innerText = "";
+
+    // Popup zur Bestätigung öffnen
     const entscheidung = confirm(`Möchten Sie die Frage ${indexInput} wirklich löschen?`);
     if (!entscheidung) return;
 
+    // Dateiname der Episode erstellen
     const episodePath = "fragen" + episodeInput;
 
     try {
+        // Prüfen ob Station existiert
         const checkExists = await fb.getDocument(episodePath, indexInput.toString());
-
         if (checkExists !== null) {
+            // Station existiert, löschen
             await fb.deleteDocument(episodePath, indexInput.toString());
         } else {
-            errorMsg.innerText = "Datei existiert nicht!";
+            // Station existiert nicht, abbruch
+            errorMsg.innerText = "Station existiert nicht!";
             return;
         }
-
-        errorMsg.innerText = "";
     } catch (error) {
         console.error("Daten werden nicht gelöscht:", error);
         errorMsg.innerText = "Fehler beim löschen der Daten.";
     } finally {
+        // Löschen Knopf freigeben
         if (fragenDeleteBtn) {
             fragenDeleteBtn.disabled = false;
-            fragenDeleteBtn.innerText = "Bitte warten";
+            fragenDeleteBtn.innerText = "Löschen";
         }
     }
 });
 
-async function fragenLaden(episode) {
+async function stationenLaden(episode) {
     try {
+        // Dateiname Episode erstellen
         const episodePath = "episode" + episode;
+
+        // Alle Stationen laden
         const geladeneFragen = await fb.getAllDocuments(episodePath);
 
+        // Stationen in Array sortiern
         alleFragen = geladeneFragen.sort((a, b) => {
             return a.id.localeCompare(b.id, undefined, { numeric: true });
         });
@@ -724,7 +798,10 @@ async function fragenLaden(episode) {
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
+        // Benutzer an Datenbank abmelden
         await fb.auth.signOut();
+
+        // Zurück zur Login Seite
         window.location.href = "index.html";
     } catch (error) {
         console.error("Fehler beim Logout:", error);
