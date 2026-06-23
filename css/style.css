@@ -272,6 +272,16 @@
         100% { background-color: var(--primary-color); } /* Kehrt zur Standardfarbe zurück */
     }
 
+    .btn-success-flash {
+        animation: successFlash 0.5s ease-in-out;
+    }
+
+    @keyframes successFlash {
+        0% { background-color: var(--primary-color); }
+        30% { background-color: var(--success-color); } /* Blitzt grün auf */
+        100% { background-color: var(--primary-color); } /* Kehrt zur Standardfarbe zurück */
+    }
+
     .beschreibung {
         margin-bottom: 0px;
         padding-bottom: 0px;

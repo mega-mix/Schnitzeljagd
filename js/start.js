@@ -78,11 +78,12 @@ fb.onAuthChanged(async (user) => {
                         neueEpisodeBtn.style.display = "block";
                         return;
                     }
-                    if (!spielerInfo.episoden[key].aktiv) return;
 
                     const opt = document.createElement("option");
                     opt.value = key; 
                     opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;
+                    opt.disabled = !spielerInfo.episoden[key].aktiv;
+                    if (!spielerInfo.episoden[key].aktiv) opt.textContent += " - 🔒💲";
                     dropdownEpisoden.appendChild(opt);
                 });
                 dropdownEpisoden.value = spielerInfo.aktiveEpisode;
@@ -116,6 +117,22 @@ document.getElementById("start-admin-btn").addEventListener("click", () => {
     window.location.href = "admin.html";
 });
 
+document.getElementById("start-episoden").addEventListener("change", async (event) => {
+    const auswahlEpisode = parseFloat(event.target.value);
+
+    // Episode in Spieler Info aktualisieren
+    spielerInfo.aktiveEpisode = auswahlEpisode;
+
+    try {
+        // Neue Episode in Datenbank schreiben
+        await fb.updateDocument("spieler", spielerUid, {
+            aktiveEpisode: spielerInfo.aktiveEpisode
+        });
+    } catch (error) {
+        console.error(error);
+    }
+});
+
 document.getElementById("start-fortschritt-btn").addEventListener("click", async () => {
     // Dropdown Episoden füllen
     const dropdownEpisoden = document.getElementById("fortschritt-episoden");
@@ -123,16 +140,14 @@ document.getElementById("start-fortschritt-btn").addEventListener("click", async
     Object.entries(spielStatus.episodenKatalog).forEach(([key]) => {
         // Freigabe Check
         if (!spielStatus.episodenKatalog[key].globalAktiv) return;
-        if (spielerInfo.episoden[key] === undefined) {
-            // Neue Episode Knopf anzeigen
-            neueEpisodeBtn.style.display = "block";
-            return;
-        }
-        if (!spielerInfo.episoden[key].aktiv) return;
+        if (spielerInfo.episoden[key] === undefined) return;
 
+        // Daten generieren
         const opt = document.createElement("option");
         opt.value = key; 
         opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;
+        opt.disabled = !spielerInfo.episoden[key].aktiv;
+        if (!spielerInfo.episoden[key].aktiv) opt.textContent += " - 🔒💲";
         dropdownEpisoden.appendChild(opt);
     });
     dropdownEpisoden.value = spielerInfo.aktiveEpisode;
@@ -164,11 +179,20 @@ document.getElementById("start-neue-episode-btn").addEventListener("click", () =
         if (spielerInfo.episoden[key] === undefined) {
             const opt = document.createElement("option");
             opt.value = key; 
-            opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;;
+            opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;
+            if (!spielStatus.episodenKatalog[key].freeToPlay) opt.textContent += " - 🔒💲";
             dropdownEpisoden.appendChild(opt);
         }
     });
     dropdownEpisoden.selectedIndex = 0;
+
+    // Free to play info
+    const freeNachricht = document.getElementById("neue-episode-free");
+    if (!spielStatus.episodenKatalog[dropdownEpisoden.value].freeToPlay) {
+        freeNachricht.innerText = "🔒💲 Diese Episode ist nicht Kostenlos und muss nach dem Download vom Admin freigegeben werden.";
+    } else {
+        freeNachricht.innerText = "";
+    }
 
     // Bereiche umschalten
     document.getElementById("start-bereich").style.display = "none";
@@ -250,7 +274,7 @@ document.getElementById("neue-episode-laden-btn").addEventListener("click", asyn
         const neueEpisodeKey = document.getElementById("neue-episoden-laden").value;
 
         // Neues Episoden Objekt lokal erstellen
-        spielerInfo.episoden[neueEpisodeKey] = { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() };
+        spielerInfo.episoden[neueEpisodeKey] = { aktiv: spielStatus.episodenKatalog[neueEpisodeKey].freeToPlay, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() };
 
         // Episoden Objekt in Datenbank schreiben
         await fb.updateDocument("spieler", spielerUid, {
@@ -269,11 +293,12 @@ document.getElementById("neue-episode-laden-btn").addEventListener("click", asyn
                 neueEpisodeBtn.style.display = "block";
                 return;
             }
-            if (!spielerInfo.episoden[key].aktiv) return;
 
             const opt = document.createElement("option");
             opt.value = key; 
-            opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;;
+            opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;
+            opt.disabled = !spielerInfo.episoden[key].aktiv;
+            if (!spielerInfo.episoden[key].aktiv) opt.textContent += " - 🔒💲";
             dropdownEpisoden.appendChild(opt);
         });
 
@@ -291,19 +316,15 @@ document.getElementById("neue-episode-abort-btn").addEventListener("click", () =
     document.getElementById("start-bereich").style.display = "block";
 });
 
-document.getElementById("start-episoden").addEventListener("change", async (event) => {
-    const auswahlEpisode = parseFloat(event.target.value);
+document.getElementById("neue-episoden-laden").addEventListener("change", () => {
+    const dropdownEpisoden = document.getElementById("neue-episoden-laden");
 
-    // Episode in Spieler Info aktualisieren
-    spielerInfo.aktiveEpisode = auswahlEpisode;
-
-    try {
-        // Neue Episode in Datenbank schreiben
-        await fb.updateDocument("spieler", spielerUid, {
-            aktiveEpisode: spielerInfo.aktiveEpisode
-        });
-    } catch (error) {
-        console.error(error);
+    // Free to play info
+    const freeNachricht = document.getElementById("neue-episode-free");
+    if (!spielStatus.episodenKatalog[dropdownEpisoden.value].freeToPlay) {
+        freeNachricht.innerText = "Diese Episode ist nicht Kostenlos und muss nach dem Download vom Admin freigegeben werden.";
+    } else {
+        freeNachricht.innerText = "";
     }
 });
 

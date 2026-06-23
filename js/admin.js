@@ -143,6 +143,11 @@ document.getElementById("admin-episoden-btn").addEventListener("click", () => {
     document.getElementById("admin-episoden-bereich").style.display = "block";
 });
 
+document.getElementById("admin-abort-btn").addEventListener("click", () => {
+    // Weiterleiten auf Start Seite
+    window.location.href = "start.html";
+});
+
 
 
 
@@ -170,12 +175,12 @@ document.getElementById("spieler-bearbeiten-btn").addEventListener("click", asyn
     const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
     dropdownSpieler.innerHTML = "";
     alleSpieler.forEach((spieler) => {
-        if (spieler.spielerName === "admin") return;
         const sp = document.createElement("option");
         sp.value = spieler.spielerName;
         sp.textContent = spieler.spielerName;
         dropdownSpieler.appendChild(sp);
     });
+    dropdownSpieler.value = 0;
 
     // Bereiche umschalten
     document.getElementById("spieler-bereich").style.display = "none";
@@ -336,7 +341,14 @@ document.getElementById("spieler-lastlogin-btn").addEventListener("click", async
 // *-------------------- SPIELER BEARBEITEN --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("spieler-bearbeiten-abort-btn").addEventListener("click", () => {
-    // Error Msg leeren
+    // GUI zurücksetzen
+    document.getElementById("spieler-bearbeiten-name").value = "";
+    document.getElementById("spieler-bearbeiten-station").value = "";
+    document.getElementById("spieler-bearbeiten-aktive-episode").value = "";
+    document.getElementById("spieler-bearbeiten-episode").value = "";
+    document.getElementById("spieler-bearbeiten-antwort-reset").checked = false;
+    document.getElementById("spieler-bearbeiten-tipp-reset").checked = false;
+    document.getElementById("spieler-bearbeiten-aktiv").checked = false;
     document.getElementById("spieler-bearbeiten-error-msg").innerText = "";
 
     // Bereiche umschalten
@@ -344,65 +356,97 @@ document.getElementById("spieler-bearbeiten-abort-btn").addEventListener("click"
     document.getElementById("spieler-bereich").style.display = "block";
 });
 
-document.getElementById("spieler-bearbeiten-laden-btn").addEventListener("click", async () => {
+document.getElementById("spieler-bearbeiten-name").addEventListener("change", async (event) => {
     // Spieler Index aus Dropdown holen
-    const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
-    const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler.value);
+    const dropdownSpieler = event.target.value;
+    const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler);
+
+    // Dropdown für aktive Episoden füllen (Nur vom Spieler geladene)
+    const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
+    dropdownAktiveEpisode.innerHTML = "";
+    const aktiveEpisodenAnzahl = Object.keys(alleSpieler[auswahlIndex].episoden).length;
+    for (let i = 1; i <= aktiveEpisodenAnzahl; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Episode " + (i) + " - " + spielStatus.episodenKatalog[i].titel;
+        if (!alleSpieler[auswahlIndex].episoden[i].aktiv) opt.textContent += " - 🔒💲";
+        dropdownAktiveEpisode.appendChild(opt);
+    };
+
+    // Dropdown für Episoden füllen (Nur vom Spieler geladene)
+    const dropdownEpisode = document.getElementById("spieler-bearbeiten-episode");
+    dropdownEpisode.innerHTML = "";
+    const episodenAnzahl = Object.keys(alleSpieler[auswahlIndex].episoden).length;
+    for (let i = 1; i <= episodenAnzahl; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Episode " + (i) + " - " + spielStatus.episodenKatalog[i].titel;
+        if (!alleSpieler[auswahlIndex].episoden[i].aktiv) opt.textContent += " - 🔒💲";
+        dropdownEpisode.appendChild(opt);
+    };
 
     // Stationen des ausgewählten Spielers laden
-    await stationenLaden(alleSpieler[auswahlIndex].aktiveEpisode);
+    await stationenLaden(dropdownEpisode.value);
 
     // Dropdown für Station füllen
     const dropdownStation = document.getElementById("spieler-bearbeiten-station");
     dropdownStation.innerHTML = "";
     alleStationen.forEach((station, i) => {
         const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = "Station " + (i);
+        opt.value = i+1;
+        opt.textContent = "Station " + (i+1);
         dropdownStation.appendChild(opt);
     });
 
-    // Dropdown für Episoden füllen
-    const dropdownAktiveEpisode = document.getElementById("spieler-bearbeiten-aktive-episode");
-    dropdownAktiveEpisode.innerHTML = "";
-    const episodenAnzahl = Object.keys(spielStatus.episodenKatalog).length;
-    for (let i = 1; i <= episodenAnzahl; i++) {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = "Episode " + (i);
-        dropdownAktiveEpisode.appendChild(opt);
-    };
-
-    // Dropdown für Episode auf Spieler einstellen
+    // Dropdown auf Spieler einstellen
     const auswahlSpieler = alleSpieler[auswahlIndex];
-    const spielerEpisode = auswahlSpieler.episoden[auswahlSpieler.aktiveEpisode];
+    const spielerEpisode = auswahlSpieler.episoden[dropdownEpisode.value];
     dropdownStation.value = String(spielerEpisode.station);
     dropdownAktiveEpisode.value = String(auswahlSpieler.aktiveEpisode);
+
+    // Episoden Freigabe auswerten
+    const aktivCheckbox = document.getElementById("spieler-bearbeiten-aktiv");
+    aktivCheckbox.checked = spielerEpisode.aktiv;
 });
 
-document.getElementById("spieler-bearbeiten-aktive-episode").addEventListener("change", async (event) => {
-    const auswahlAktiveEpisode = event.target.value;
+document.getElementById("spieler-bearbeiten-episode").addEventListener("change", async (event) => {
+    const auswahlEpisode = event.target.value;
+
+    // Spieler Index aus Dropdown holen
+    const dropdownSpieler = document.getElementById("spieler-bearbeiten-name");
+    const auswahlIndex = alleSpieler.findIndex(spieler => spieler.spielerName === dropdownSpieler.value);
 
     // Stationen zur ausgewählten Episode laden
-    await stationenLaden(auswahlAktiveEpisode);
+    await stationenLaden(auswahlEpisode);
 
     // Dropdown der Stationen füllen
     const dropdownStation = document.getElementById("spieler-bearbeiten-station");
     dropdownStation.innerHTML = "";
     alleStationen.forEach((station, i) => {
         const opt = document.createElement("option");
-        opt.value = i;
+        opt.value = i+1;
         opt.textContent = "Station " + (i+1);
         dropdownStation.appendChild(opt);
     });
+
+    // Dropdown auf Spieler einstellen
+    const auswahlSpieler = alleSpieler[auswahlIndex];
+    const spielerEpisode = auswahlSpieler.episoden[auswahlEpisode];
+    dropdownStation.value = String(spielerEpisode.station);
+
+    // Episoden Freigabe auswerten
+    const aktivCheckbox = document.getElementById("spieler-bearbeiten-aktiv");
+    aktivCheckbox.checked = spielerEpisode.aktiv;
 });
 
 document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click", async () => {
     const nameInput = document.getElementById("spieler-bearbeiten-name").value.trim();
     const stationInput = parseInt(document.getElementById("spieler-bearbeiten-station").value);
     const aktiveEpisodeInput = parseInt(document.getElementById("spieler-bearbeiten-aktive-episode").value);
+    const episodeInput = parseInt(document.getElementById("spieler-bearbeiten-episode").value);
     const antwortReset = document.getElementById("spieler-bearbeiten-antwort-reset").checked;
     const tippReset = document.getElementById("spieler-bearbeiten-tipp-reset").checked;
+    const aktiv = document.getElementById("spieler-bearbeiten-aktiv").checked;
     const errorMsg = document.getElementById("spieler-bearbeiten-error-msg");
 
     // Prüfung auf Vollständigkeit
@@ -419,20 +463,21 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
         // Daten in Datenbank schreiben
         try {
             // Alle Spieler laden und markierten suchen
-            alleSpieler = await fb.getAllDocuments("spieler");
+            //? alleSpieler = await fb.getAllDocuments("spieler");
             const gefundeneSpieler = alleSpieler.find(s => s.spielerName === nameInput);
             
             // Sicherheitsprüfung
             if (gefundeneSpieler) {
                 if (stationInput >= 1) {
-                    // Episode des Spielers holen
+                    // Episoden des Spielers holen
                     const episoden = gefundeneSpieler.episoden;
 
                     // Neue Werte übernehmen
-                    episoden[aktiveEpisodeInput].station = stationInput;
-                    if (antwortReset) episoden[aktiveEpisodeInput].antworten = [];
-                    if (tippReset) episoden[aktiveEpisodeInput].tipps = [];
-                    episoden[aktiveEpisodeInput].zeitstempel = Date.now();
+                    episoden[episodeInput].station = stationInput;
+                    if (antwortReset) episoden[episodeInput].antworten = [];
+                    if (tippReset) episoden[episodeInput].tipps = [];
+                    episoden[episodeInput].aktiv = aktiv;
+                    episoden[episodeInput].zeitstempel = Date.now();
 
                     // Daten in Datenbank schreiben
                     await fb.updateDocument("spieler", gefundeneSpieler.id, {
@@ -442,16 +487,13 @@ document.getElementById("spieler-bearbeiten-save-btn").addEventListener("click",
                 }
 
                 // GUI zurücksetzen
-                document.getElementById("spieler-bearbeiten-name").value = "";
-                document.getElementById("spieler-bearbeiten-station").value = "";
-                document.getElementById("spieler-bearbeiten-aktive-episode").value = "";
                 document.getElementById("spieler-bearbeiten-antwort-reset").checked = false;
                 document.getElementById("spieler-bearbeiten-tipp-reset").checked = false;
-                errorMsg.innerText = "";
 
-                // Bereiche umschalten
-                document.getElementById("spieler-bearbeiten-bereich").style.display = "none";
-                document.getElementById("spieler-bereich").style.display = "block";
+                // GUI Visuelles Feedback
+                bearbeitenSaveBtn.classList.remove("btn-success-flash");
+                void bearbeitenSaveBtn.offsetWidth;
+                bearbeitenSaveBtn.classList.add("btn-success-flash");
 
                 // Speicher Knopf freigeben
                 bearbeitenSaveBtn.disabled = false;
@@ -500,10 +542,6 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
     try {
         // Daten in Datenbank schreiben
         await fb.setzeAdminNachricht(nachrichtInput);
-        
-        // Bereiche umschalten
-        document.getElementById("admin-nachricht-bereich").style.display = "none";
-        document.getElementById("admin-bereich").style.display = "block";
 
         // Spielstatus aus Datenbank laden
         ladeSpielstatus();
@@ -511,6 +549,11 @@ document.getElementById("nachricht-save-btn").addEventListener("click", async ()
         // Speicher Knopf freigeben
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
+
+        // GUI Visuelles Feedback
+        nachrichtSaveBtn.classList.remove("btn-success-flash");
+        void nachrichtSaveBtn.offsetWidth;
+        nachrichtSaveBtn.classList.add("btn-success-flash");
     } catch (error) {
         console.error(error);
         errorMsg.innerText = "Fehler beim Speichern der Daten.";
@@ -549,10 +592,6 @@ document.getElementById("news-save-btn").addEventListener("click", async () => {
     try {
         // Speichern in Datenbank
         await fb.setzeAdminNews(nachrichtInput);
- 
-        // Bereiche umschalten
-        document.getElementById("admin-news-bereich").style.display = "none";
-        document.getElementById("admin-bereich").style.display = "block";
 
         // Spielstatus neu laden
         ladeSpielstatus();
@@ -560,6 +599,11 @@ document.getElementById("news-save-btn").addEventListener("click", async () => {
         // Speicher Knopf freigeben
         nachrichtSaveBtn.disabled = false;
         nachrichtSaveBtn.innerText = "Speichern";
+
+        // GUI Visuelles Feedback
+        nachrichtSaveBtn.classList.remove("btn-success-flash");
+        void nachrichtSaveBtn.offsetWidth;
+        nachrichtSaveBtn.classList.add("btn-success-flash");
     } catch (error) {
         console.error(error);
         errorMsg.innerText = "Fehler beim Speichern der News.";
@@ -794,6 +838,11 @@ document.getElementById("station-save-btn").addEventListener("click", async () =
             // Station existiert nicht, neu anlegen
             await fb.createDocument(episodePath, stationInput.toString(), neueStation);
         }
+
+        // GUI Visuelles Feedback
+        stationenSaveBtn.classList.remove("btn-success-flash");
+        void stationenSaveBtn.offsetWidth;
+        stationenSaveBtn.classList.add("btn-success-flash");
     } catch (error) {
         console.error("Daten werden nicht gespeichert:", error);
         errorMsg.innerText = "Fehler beim speichern der Daten.";
@@ -844,6 +893,11 @@ document.getElementById("station-delete-btn").addEventListener("click", async ()
             errorMsg.innerText = "Station existiert nicht!";
             return;
         }
+
+        // GUI Visuelles Feedback
+        stationenDeleteBtn.classList.remove("btn-success-flash");
+        void stationenDeleteBtn.offsetWidth;
+        stationenDeleteBtn.classList.add("btn-success-flash");
     } catch (error) {
         console.error("Daten werden nicht gelöscht:", error);
         errorMsg.innerText = "Fehler beim löschen der Daten.";
@@ -888,11 +942,13 @@ document.getElementById("episoden-bearbeiten-abort-btn").addEventListener("click
     // GUI Felder leeren
     document.getElementById("episoden-bearbeiten-titel").value = "";
     document.getElementById("episoden-bearbeiten-aktiv").checked = false;
+    document.getElementById("episoden-bearbeiten-free").checked = false;
 });
 
 document.getElementById("episoden-episode-laden").addEventListener("change", async () => {
     const titelInput = document.getElementById("episoden-bearbeiten-titel");
     const aktivCheckbox = document.getElementById("episoden-bearbeiten-aktiv");
+    const freeCheckbox = document.getElementById("episoden-bearbeiten-free");
     const episodeKey = event.target.value;
 
     // Bei neuer Episode nicht laden
@@ -900,6 +956,7 @@ document.getElementById("episoden-episode-laden").addEventListener("change", asy
     if (episodeKey > episodenAnzahl) {
         titelInput.value = "";
         aktivCheckbox.checked = false;
+        freeCheckbox.checked = false;
         return;
     }
 
@@ -910,7 +967,8 @@ document.getElementById("episoden-episode-laden").addEventListener("change", asy
 
         // GUI Felder füllen
         titelInput.value = spielStatus.episodenKatalog[episodeKey].titel;
-        aktivCheckbox.checked = spielStatus.episodenKatalog[episodeKey].globalAktiv
+        aktivCheckbox.checked = spielStatus.episodenKatalog[episodeKey].globalAktiv;
+        freeCheckbox.checked = spielStatus.episodenKatalog[episodeKey].freeToPlay;
     } catch (error) {
         console.error("Fehler beim Laden der Episoden-Informationen:", error);
     }
@@ -919,6 +977,7 @@ document.getElementById("episoden-episode-laden").addEventListener("change", asy
 document.getElementById("episoden-bearbeiten-save-btn").addEventListener("click", async () => {
     const titelInput = document.getElementById("episoden-bearbeiten-titel").value;
     const aktivCheckbox = document.getElementById("episoden-bearbeiten-aktiv").checked;
+    const freeCheckbox = document.getElementById("episoden-bearbeiten-free").checked;
     const episodeKey = document.getElementById("episoden-episode-laden").value;
 
     // Ohne Titel nicht speichern
@@ -940,7 +999,8 @@ document.getElementById("episoden-bearbeiten-save-btn").addEventListener("click"
             // Episoden Objekt erstellen
             const neueEpisode = {
                 titel: titelInput,
-                globalAktiv: aktivCheckbox
+                globalAktiv: aktivCheckbox,
+                freeToPlay: freeCheckbox
             };
             spielStatus.episodenKatalog[episodeKey] = neueEpisode;
 
@@ -968,16 +1028,23 @@ document.getElementById("episoden-bearbeiten-save-btn").addEventListener("click"
             // GUI Felder leeren
             document.getElementById("episoden-bearbeiten-titel").value = "";
             document.getElementById("episoden-bearbeiten-aktiv").checked = false;
+            document.getElementById("episoden-bearbeiten-free").checked = false;
         } else {
             // Episode updaten
 
             // Daten in Datenbank schreiben
             spielStatus.episodenKatalog[episodeKey].titel = titelInput;
             spielStatus.episodenKatalog[episodeKey].globalAktiv = aktivCheckbox;
+            spielStatus.episodenKatalog[episodeKey].freeToPlay = freeCheckbox;
             await fb.updateDocument("spielStatus", "global", {
                 episodenKatalog: spielStatus.episodenKatalog
             });
         }
+
+        // GUI Visuelles Feedback
+        bearbeitenSaveBtn.classList.remove("btn-success-flash");
+        void bearbeitenSaveBtn.offsetWidth;
+        bearbeitenSaveBtn.classList.add("btn-success-flash");
     } catch (error) {
         console.error("Fehler beim speichern der Episoden-Information:", error);
     } finally {

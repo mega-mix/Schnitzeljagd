@@ -21,13 +21,14 @@
 
 
     <div id="admin-bereich" class="bereich" style="display:none;">
-        <h2>Admin Bereich</h2>
-        <button id="admin-freigabe-btn">Spiel freigeben</button>
-        <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-episoden-btn">Episoden bearbeiten</button>
+        <h2>Admin-Bereich</h2>
+        <button id="admin-abort-btn">Zurück</button>
+        <button id="admin-spieler-btn">Spieler...</button>
+        <button id="admin-episoden-btn">Episoden...</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
         <button id="admin-news-btn">News Nachricht</button>
-        <button id="admin-spieler-btn">Spieler anzeigen</button>
+        <button id="admin-freigabe-btn">Spiel freigeben</button>
+        <button id="admin-tipp-btn">Tipps freigeben</button>
         <p id="admin-status">Spiel ...</p>
         <p id="admin-status-tipp">Tipps ...</p>
     </div>
@@ -82,10 +83,11 @@
         <h2>Spieler bearbeiten</h2>
         <p class="beschreibung">Spielername:</p>
         <select id="spieler-bearbeiten-name"></select>
-        <button id="spieler-bearbeiten-laden-btn">Laden</button>
         <br><br><hr>
-        <p class="beschreibung">Episode:</p>
+        <p class="beschreibung">Aktive Episode:</p>
         <select id="spieler-bearbeiten-aktive-episode"></select>
+        <p class="beschreibung">Episode:</p>
+        <select id="spieler-bearbeiten-episode"></select>
         <p class="beschreibung">Station:</p>
         <select id="spieler-bearbeiten-station"></select>
         <div class="checkbox-gruppe">
@@ -95,6 +97,10 @@
         <div class="checkbox-gruppe">
             <input type="checkbox" id="spieler-bearbeiten-tipp-reset" name="tippReset" value="aktiv">
             <label for="spieler-bearbeiten-tipp-reset">Tipps zurücksetzen</label>
+        </div>
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="spieler-bearbeiten-aktiv" name="eppisodeAktiv" value="aktiv">
+            <label for="spieler-bearbeiten-aktiv">Episode freigeben</label>
         </div>
         <br><br>
         <button id="spieler-bearbeiten-save-btn">Speichern</button>
@@ -108,7 +114,7 @@
         <textarea type="text" id="admin-nachricht" placeholder="Admin Nachricht..."></textarea>
         <br><br>
         <button id="nachricht-save-btn">Speichern</button>
-        <button id="nachricht-abort-btn">Abbrechen</button>
+        <button id="nachricht-abort-btn">Zurück</button>
         <p id="nachrichten-error-msg" style="color:red;"></p>
     </div>
 
@@ -118,12 +124,12 @@
         <textarea type="text" id="admin-news" placeholder="News..."></textarea>
         <br><br>
         <button id="news-save-btn">Speichern</button>
-        <button id="news-abort-btn">Abbrechen</button>
+        <button id="news-abort-btn">Zurück</button>
         <p id="news-error-msg" style="color:red;"></p>
     </div>
 
     <div id="admin-episoden-bereich" class="bereich" style="display: none;">
-        <h2>Episoden bearbeiten</h2>
+        <h2>Episoden</h2>
         <button id="episoden-episoden-btn">Episoden bearbeiten</button>
         <button id="episoden-station-btn">Stationen bearbeiten</button>
         <button id="episoden-abort-btn">Zurück</button>
@@ -155,7 +161,7 @@
         <input id="station-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
         <button id="station-save-btn">Speichern</button>
         <button id="station-delete-btn">Löschen</button>
-        <button id="station-abort-btn">Abbrechen</button>
+        <button id="station-abort-btn">Zurück</button>
         <p id="station-error-msg" style="color:red;"></p>
     </div>
 
@@ -170,9 +176,13 @@
             <input type="checkbox" id="episoden-bearbeiten-aktiv" name="episodeAktiv" value="aktiv">
             <label for="episoden-bearbeiten-aktiv">Episode aktiv</label>
         </div>
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="episoden-bearbeiten-free" name="episodeFree" value="aktiv">
+            <label for="episoden-bearbeiten-free">Free to play</label>
+        </div>
         <br><br><hr>
         <button id="episoden-bearbeiten-save-btn">Speichern</button>
-        <button id="episoden-bearbeiten-abort-btn">Abbrechen</button>
+        <button id="episoden-bearbeiten-abort-btn">Zurück</button>
         <p id="episoden-error-msg" style="color:red;"></p>
     </div>
 
