@@ -103,23 +103,65 @@ async function zeigeStation() {
         const keyEpisode = spielerInfo.aktiveEpisode;
         const spielerEpisode = spielerInfo.episoden[keyEpisode];
 
-        // Auswerten ob Tipp angezeigt wird
-        const indexTipp = spielerInfo.episoden[keyEpisode].tipps.findIndex(tp => tp.station === spielerInfo.episoden[keyEpisode].station);
+        // Im Tipp Array schauen ob die Station vorhanden ist
+        const indexTipp = spielerInfo.episoden[keyEpisode].tipps.findLastIndex(tp => tp.station === spielerInfo.episoden[keyEpisode].station);
+
+        // Wenn Station in Array gefunden wurde
         if (indexTipp >= 0) {
             // Tipp wurde schon angezeigt, dann wieder zeigen
             const tippNr = spielerInfo.episoden[keyEpisode].tipps[indexTipp].tippNr;
             switch (tippNr) {
                 case 1:
-                    // Tipp Knopf sperren
-                    spielTippBtn.disabled = true;
+                    // Tipp Knopf beschriften wenn weiterer Tipp vorhanden
+                    if (alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2 !== undefined && alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2 !== "") {
+                        spielTippBtn.innerText = "Tipp 2 anzeigen";
+                    } else {
+                        spielTippBtn.innerText = "Tipp anzeigen";
+                        spielTippBtn.disabled = true;
+                    }
 
                     // Tipp anzeigen
-                    spielTipp.innerText = alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
+                    spielTipp.innerHTML = `
+                        Tipp 1: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1}
+                    `;
+                    break;
+
+                case 2:
+                    // Tipp Knopf beschriften wenn weiterer Tipp vorhanden
+                    if (alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp3 !== undefined && alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp3 !== "") {
+                        spielTippBtn.innerText = "Tipp 3 anzeigen";
+                    } else {
+                        spielTippBtn.innerText = "Tipp anzeigen";
+                        spielTippBtn.disabled = true;
+                    }
+
+                    // Tipps anzeigen
+                    spielTipp.innerHTML = `
+                        Tipp 1: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1}
+                        <br><hr>
+                        Tipp 2: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2}
+                    `;
+                    break;
+
+                case 3:
+                    // Tipp Knopf sperren
+                    spielTippBtn.disabled = true;
+                    spielTippBtn.innerText = "Tipp anzeigen";
+
+                    // Tipps anzeigen
+                    spielTipp.innerHTML = `
+                        Tipp 1: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1}
+                        <br><hr>
+                        Tipp 2: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2}
+                        <br><hr>
+                        Tipp 3: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp3}
+                    `;
                     break;
             }
         } else {
             // Tipp Knopf freigeben und Tipp leeren
             spielTippBtn.disabled = false;
+            spielTippBtn.innerText = "Tipp 1 anzeigen";
             spielTipp.innerText = "";
         }
 
@@ -321,18 +363,72 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     // Tipp Knopf sperren
     if (tippBtn) tippBtn.disabled = true;
 
+    // Im Tipp Array schauen ob die Station vorhanden ist
+    const indexTipp = spielerInfo.episoden[keyEpisode].tipps.findLastIndex(tp => tp.station === spielerInfo.episoden[keyEpisode].station);
+
+    // Wenn nicht im Array, Tipp ist erster Tipp
+    let tippNr = 1;
+    if (indexTipp >= 0) tippNr = spielerInfo.episoden[keyEpisode].tipps[indexTipp].tippNr +1;
+
+    // Auswerten welcher Tipp angezeigt wird
+    switch (tippNr) {
+        case 1:
+            // Tipp Knopf beschriften wenn weiterer Tipp vorhanden
+            if (alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2 !== undefined && alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2 !== "") {
+                tippBtn.innerText = "Tipp 2 anzeigen";
+            } else {
+                tippBtn.innerText = "Tipp anzeigen";
+                tippBtn.disabled = true;
+            }
+
+            // Tipp anzeigen
+            spielTipp.innerHTML = `
+                Tipp 1: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1}
+            `;
+            break;
+
+        case 2:
+            // Tipp Knopf beschriften wenn weiterer Tipp vorhanden
+            if (alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp3 !== undefined && alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp3 !== "") {
+                tippBtn.innerText = "Tipp 3 anzeigen";
+            } else {
+                tippBtn.innerText = "Tipp anzeigen";
+                tippBtn.disabled = true;
+            }
+
+            // Tipps anzeigen
+            spielTipp.innerHTML = `
+                Tipp 1: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1}
+                <br><hr>
+                Tipp 2: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2}
+            `;
+            break;
+
+        case 3:
+            // Tipp Knopf sperren
+            tippBtn.disabled = true;
+            tippBtn.innerText = "Tipp anzeigen";
+
+            // Tipps anzeigen
+            spielTipp.innerHTML = `
+                Tipp 1: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1}
+                <br><hr>
+                Tipp 2: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp2}
+                <br><hr>
+                Tipp 3: ${alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp3}
+            `;
+            break;
+    }
+
     // Tipp in Array sichern
     const tippObj = {
         station: spielerInfo.episoden[keyEpisode].station,
-        tippNr: 1,
+        tippNr: tippNr,
         zeitstempel: Date.now() 
     };
     spielerInfo.episoden[keyEpisode].tipps.push(tippObj);
 
-    // Tipp anzeigen
-    spielTipp.innerText = alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
-
-    // Zeitstempel generieren
+    // Zeitstempel Episode generieren
     spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();
 
     // Daten in Datenbank schreiben
@@ -342,7 +438,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
         });
     } catch (error) {
         console.error(error);
-        if (spielTipp) spielTipp.innerText = "Fehler beim Speichern der Tipps.";
+        if (spielTipp) spielTipp.innerText = "Fehler beim anzeigen der Tipps.";
 
         // Tipp Knopf freigeben
         if (tippBtn) tippBtn.disabled = false;

@@ -283,3 +283,10 @@
     .beschreibung + textarea {
         margin-top: 5px;
     }
+
+    .zellen-text-limit {
+    max-width: 120px; /* Passe diesen Wert an den Platz auf dem Handy an */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

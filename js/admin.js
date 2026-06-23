@@ -225,31 +225,34 @@ async function ladeFortschritt() {
         alleSpieler.forEach((spieler) => {
             // Alle Spieler, außer Admin
             if (spieler.spielerName && spieler.spielerName.toLowerCase() !== "admin") {
-                let uhrzeit = "--.--., --:--:--"
+                let uhrzeit = "--:--:--";
+                let datum = "--.--.--";
 
                 const episode = spieler.episoden[spieler.aktiveEpisode];
 
                 // Zeitstempel formatieren
                 if (episode.zeitstempel) {
                     uhrzeit = new Date(episode.zeitstempel).toLocaleTimeString("de-DE", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "2-digit",
                         hour: "2-digit",
                         minute: "2-digit",
                         second: "2-digit"
+                    });
+                    datum = new Date(episode.zeitstempel).toLocaleDateString("de-DE", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "2-digit"
                     });
                 }
                 
                 // Tabelle generieren
                 htmlInhalt += `
                     <tr>
-                        <td style="padding: 8px;">${spieler.spielerName}</td>
+                        <td style="padding: 8px;" class="zellen-text-limit" title="${spieler.spielerName}">${spieler.spielerName}</td>
                         <td style="padding: 8px;">${spieler.aktiveEpisode}</td>
                         <td style="padding: 8px;">${episode.station}</td>
                         <td style="padding: 8px;">${episode.antworten.length}</td>
                         <td style="padding: 8px;">${episode.tipps.length}</td>
-                        <td style="padding: 8px;">${uhrzeit}</td>
+                        <td style="padding: 8px;">${datum}<br>${uhrzeit}</td>
                     </tr>
                 `;
             }
@@ -290,25 +293,28 @@ document.getElementById("spieler-lastlogin-btn").addEventListener("click", async
 
         alleSpieler.forEach((spieler) => {
             if (spieler.spielerName) {
-                let lastLogin = "--.--.--, --:--:--"
+                let uhrzeit = "--:--:--";
+                let datum = "--.--.--";
                 
                 // Zeitstempel formatieren
                 if (spieler.lastLogin) {
-                    lastLogin = new Date(spieler.lastLogin).toLocaleTimeString("de-DE", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "2-digit",
+                    uhrzeit = new Date(spieler.lastLogin).toLocaleTimeString("de-DE", {
                         hour: "2-digit",
                         minute: "2-digit",
                         second: "2-digit"
+                    });
+                    datum = new Date(spieler.lastLogin).toLocaleDateString("de-DE", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "2-digit"
                     });
                 }
                 
                 // Tabelle generieren
                 htmlInhalt += `
                     <tr>
-                        <td style="padding: 8px;">${spieler.spielerName}</td> 
-                        <td style="padding: 8px;">${lastLogin}</td>
+                        <td style="padding: 8px;" class="zellen-text-limit" title="${spieler.spielerName}">${spieler.spielerName}</td> 
+                        <td style="padding: 8px;">${datum}<br>${uhrzeit}</td>
                     </tr>
                 `;
             }
@@ -657,7 +663,9 @@ document.getElementById("station-abort-btn").addEventListener("click", () => {
     // GUI Felder leeren
     document.getElementById("station-frage").value = "";
     document.getElementById("station-antwort").value = "";
-    document.getElementById("station-tipp").value = "";
+    document.getElementById("station-tipp-1").value = "";
+    document.getElementById("station-tipp-2").value = "";
+    document.getElementById("station-tipp-3").value = "";
     document.getElementById("station-nummer").value = "";
     document.getElementById("station-error-msg").innerText = "";
     document.getElementById("station-station-laden").value = 0;
@@ -688,7 +696,9 @@ document.getElementById("station-laden-btn").addEventListener("click", async () 
             // GUI Felder leeren
             document.getElementById("station-frage").value = "";
             document.getElementById("station-antwort").value = "";
-            document.getElementById("station-tipp").value = "";
+            document.getElementById("station-tipp-1").value = "";
+            document.getElementById("station-tipp-2").value = "";
+            document.getElementById("station-tipp-3").value = "";
             document.getElementById("station-nummer").value = "";
             document.getElementById("station-episode").value = "";
 
@@ -699,7 +709,9 @@ document.getElementById("station-laden-btn").addEventListener("click", async () 
         // GUI Felder mit Daten füllen
         document.getElementById("station-frage").value = alleStationen[station-1].frage;
         document.getElementById("station-antwort").value = alleStationen[station-1].antwort;
-        document.getElementById("station-tipp").value = alleStationen[station-1].tipp1;
+        document.getElementById("station-tipp-1").value = alleStationen[station-1].tipp1;
+        document.getElementById("station-tipp-2").value = alleStationen[station-1].tipp2;
+        document.getElementById("station-tipp-3").value = alleStationen[station-1].tipp3;
         document.getElementById("station-nummer").value = parseFloat(station);
         document.getElementById("station-episode").value = episode;
         errorMsg.innerText = "";
@@ -733,7 +745,9 @@ document.getElementById("station-episode-laden").addEventListener("change", asyn
 document.getElementById("station-save-btn").addEventListener("click", async () => {
     const frageInput = document.getElementById("station-frage").value;
     const antwortInput = document.getElementById("station-antwort").value;
-    const tippInput = document.getElementById("station-tipp").value;
+    const tippInput1 = document.getElementById("station-tipp-1").value;
+    const tippInput2 = document.getElementById("station-tipp-2").value;
+    const tippInput3 = document.getElementById("station-tipp-3").value;
     const stationInput = document.getElementById("station-nummer").value;
     const episodeInput = document.getElementById("station-episode").value;
     const errorMsg = document.getElementById("station-error-msg");
@@ -762,7 +776,9 @@ document.getElementById("station-save-btn").addEventListener("click", async () =
     const neueStation = {
         frage: frageInput,
         antwort: antwortInput,
-        tipp1: tippInput
+        tipp1: tippInput1,
+        tipp2: tippInput2,
+        tipp3: tippInput3
     };
 
     // Dateiname Episode für Datenbank erstellen
