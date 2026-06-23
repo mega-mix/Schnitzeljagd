@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="top-bar">
-        <img id="top-logo" src="assets/icon/logo.png" alt="Logo">
+        <img id="top-logo" src="assets/icons/logo.png" alt="Logo">
         <div id="top-links">
             <button id="logout-btn">Logout</button>
             <a id="top-link" href="start.html">Startseite</a>
@@ -21,13 +21,14 @@
 
 
     <div id="admin-bereich" class="bereich" style="display:none;">
-        <h2>Admin Bereich</h2>
-        <button id="admin-freigabe-btn">Spiel freigeben</button>
-        <button id="admin-tipp-btn">Tipps freigeben</button>
-        <button id="admin-fragen-btn">Fragen bearbeiten</button>
+        <h2>Admin-Bereich</h2>
+        <button id="admin-abort-btn">Zurück</button>
+        <button id="admin-spieler-btn">Spieler...</button>
+        <button id="admin-episoden-btn">Episoden...</button>
         <button id="admin-nachricht-btn">Admin Nachricht</button>
         <button id="admin-news-btn">News Nachricht</button>
-        <button id="admin-spieler-btn">Spieler anzeigen</button>
+        <button id="admin-freigabe-btn">Spiel freigeben</button>
+        <button id="admin-tipp-btn">Tipps freigeben</button>
         <p id="admin-status">Spiel ...</p>
         <p id="admin-status-tipp">Tipps ...</p>
     </div>
@@ -49,7 +50,7 @@
             <thead>
                 <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Spieler</th>
-                    <th style="padding: 8px;">letzter Login</th>
+                    <th style="padding: 8px;">Login</th>
                 </tr>
             </thead>
             <tbody id="spieler-lastlogin-tabelle-body"></tbody>
@@ -69,7 +70,7 @@
                     <th style="padding: 8px;">S</th>
                     <th style="padding: 8px;">A</th>
                     <th style="padding: 8px;">T</th>
-                    <th style="padding: 8px;">Zeitstempel</th>
+                    <th style="padding: 8px;">Zeit</th>
                 </tr>
             </thead>
             <tbody id="spieler-fortschritt-tabelle-body">
@@ -79,13 +80,14 @@
 
 
     <div id="spieler-bearbeiten-bereich" class="bereich" style="display: none;">
-        <h2 style="margin-top: 16px;">Spieler bearbeiten</h2>
+        <h2>Spieler bearbeiten</h2>
         <p class="beschreibung">Spielername:</p>
         <select id="spieler-bearbeiten-name"></select>
-        <button id="spieler-bearbeiten-laden-btn">Laden</button>
         <br><br><hr>
-        <p class="beschreibung">Episode:</p>
+        <p class="beschreibung">Aktive Episode:</p>
         <select id="spieler-bearbeiten-aktive-episode"></select>
+        <p class="beschreibung">Episode:</p>
+        <select id="spieler-bearbeiten-episode"></select>
         <p class="beschreibung">Station:</p>
         <select id="spieler-bearbeiten-station"></select>
         <div class="checkbox-gruppe">
@@ -96,6 +98,10 @@
             <input type="checkbox" id="spieler-bearbeiten-tipp-reset" name="tippReset" value="aktiv">
             <label for="spieler-bearbeiten-tipp-reset">Tipps zurücksetzen</label>
         </div>
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="spieler-bearbeiten-aktiv" name="eppisodeAktiv" value="aktiv">
+            <label for="spieler-bearbeiten-aktiv">Episode freigeben</label>
+        </div>
         <br><br>
         <button id="spieler-bearbeiten-save-btn">Speichern</button>
         <button id="spieler-bearbeiten-abort-btn">Abbrechen</button>
@@ -104,42 +110,80 @@
 
 
     <div id="admin-nachricht-bereich" class="bereich" style="display: none;">
+        <h2>Admin Nachricht</h2>
         <textarea type="text" id="admin-nachricht" placeholder="Admin Nachricht..."></textarea>
         <br><br>
         <button id="nachricht-save-btn">Speichern</button>
-        <button id="nachricht-abort-btn">Abbrechen</button>
+        <button id="nachricht-abort-btn">Zurück</button>
         <p id="nachrichten-error-msg" style="color:red;"></p>
     </div>
 
 
     <div id="admin-news-bereich" class="bereich" style="display: none;">
+        <h2>News Nachricht</h2>
         <textarea type="text" id="admin-news" placeholder="News..."></textarea>
         <br><br>
         <button id="news-save-btn">Speichern</button>
-        <button id="news-abort-btn">Abbrechen</button>
+        <button id="news-abort-btn">Zurück</button>
         <p id="news-error-msg" style="color:red;"></p>
     </div>
 
+    <div id="admin-episoden-bereich" class="bereich" style="display: none;">
+        <h2>Episoden</h2>
+        <button id="episoden-episoden-btn">Episoden bearbeiten</button>
+        <button id="episoden-station-btn">Stationen bearbeiten</button>
+        <button id="episoden-abort-btn">Zurück</button>
+    </div>
 
-    <div id="admin-fragen-bereich" class="bereich" style="display: none;">
+    <div id="episoden-station-bereich" class="bereich" style="display: none;">
+        <h2>Staion bearbeiten</h2>
         <p class="beschreibung">Episode:</p>
-        <select id="fragen-episode-laden"></select>
+        <select id="station-episode-laden"></select>
         <p class="beschreibung">Station:</p>
-        <select id="fragen-station-laden"></select>
-        <button id="fragen-laden-btn">Laden</button>
+        <select id="station-station-laden"></select>
+        <button id="station-laden-btn">Laden</button>
         <br><br><hr>
         <p class="beschreibung">Frage:</p>
-        <textarea id="fragen-frage" rows="5" placeholder="Frage..."></textarea>
+        <textarea id="station-frage" rows="5" placeholder="Frage..."></textarea>
         <p class="beschreibung">Antwort:</p>
-        <textarea id="fragen-antwort" placeholder="Antwort..."></textarea>
+        <textarea id="station-antwort" placeholder="Antwort..."></textarea>
+        <p class="beschreibung">Tipp 1:</p>
+        <textarea id="station-tipp-1" placeholder="Tipp 1..."></textarea>
+        <p class="beschreibung">Tipp 2:</p>
+        <textarea id="station-tipp-2" placeholder="Tipp 2..."></textarea>
+        <p class="beschreibung">Tipp 3:</p>
+        <textarea id="station-tipp-3" placeholder="Tipp 3..."></textarea>
+        <br><br><hr>
+        <p>Speichern unter:</p>
         <p class="beschreibung">Episode:</p>
-        <input id="fragen-episode" type="number" min="1" inputmode="numeric" placeholder="Episode...">
+        <select id="station-episode"></select>
         <p class="beschreibung">Station:</p>
-        <input id="fragen-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
-        <button id="fragen-save-btn">Speichern</button>
-        <button id="fragen-delete-btn">Löschen</button>
-        <button id="fragen-abort-btn">Abbrechen</button>
-        <p id="fragen-error-msg" style="color:red;"></p>
+        <input id="station-nummer" type="number" min="1" inputmode="numeric" placeholder="Station...">
+        <button id="station-save-btn">Speichern</button>
+        <button id="station-delete-btn">Löschen</button>
+        <button id="station-abort-btn">Zurück</button>
+        <p id="station-error-msg" style="color:red;"></p>
+    </div>
+
+    <div id="episoden-episoden-bereich" class="bereich" style="display: none;">
+        <h2>Episoden bearbeiten</h2>
+        <p class="beschreibung">Episode:</p>
+        <select id="episoden-episode-laden"></select>
+        <br><br><hr>
+        <p class="beschreibung">Titel:</p>
+        <input id="episoden-bearbeiten-titel" type="text" placeholder="Titel...">
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="episoden-bearbeiten-aktiv" name="episodeAktiv" value="aktiv">
+            <label for="episoden-bearbeiten-aktiv">Episode aktiv</label>
+        </div>
+        <div class="checkbox-gruppe">
+            <input type="checkbox" id="episoden-bearbeiten-free" name="episodeFree" value="aktiv">
+            <label for="episoden-bearbeiten-free">Free to play</label>
+        </div>
+        <br><br><hr>
+        <button id="episoden-bearbeiten-save-btn">Speichern</button>
+        <button id="episoden-bearbeiten-abort-btn">Zurück</button>
+        <p id="episoden-error-msg" style="color:red;"></p>
     </div>
 
 

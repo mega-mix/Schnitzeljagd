@@ -3,7 +3,7 @@ import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, dele
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 
-export const APP_VERSION ="v1.6.1";
+export const APP_VERSION ="v1.8.0";
 
 export class FirebaseService {
     constructor() {
@@ -36,27 +36,30 @@ export class FirebaseService {
     }
 
     /**
-     * Registriert einen neuen Spieler im Auth-System UND legt sofort 
+     * Registriert einen neuen Spieler im Auth-System und legt sofort 
      * das passende Spieler-Dokument in Firestore an (ID = UID).
      */
     async registriereSpieler(spielerName, passwort) {
+        // Spielernamen überarbeiten
         const saubererName = spielerName.trim().replace(/[^a-zA-Z0-9 äöüÄÖÜß\-_]/g, "");
         const emailName = saubererName
             .toLowerCase()
             .replace(/ä/gi, "ae").replace(/ö/gi, "oe").replace(/ü/gi, "ue").replace(/ß/gi, "ss")
 
+        // Email Adresse erstellen
         const fakeEmail = this._baueFakeEmail(emailName);
 
+        // Episoden Objekt erstellen
         const episoden = {
             1: { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() },
             2: { aktiv: true, station: 1, antworten: [], tipps: [], zeitstempel: Date.now() }
         }
         
-        // 1. Im Auth-System registrieren
+        // Im Auth-System registrieren
         const userCredential = await createUserWithEmailAndPassword(this.auth, fakeEmail, passwort);
         const uid = userCredential.user.uid;
 
-        // 2. Direkt das geschützte Dokument in Firestore anlegen
+        // Dokument in Datenbank anlegen
         const docRef = doc(this.db, "spieler", uid);
         await setDoc(docRef, {
             spielerName: saubererName.trim(),
@@ -68,17 +71,25 @@ export class FirebaseService {
     }
 
     /**
-     * Loggt einen Spieler ein und gibt deren UID zurück
+     * Loggt einen Spieler ein und gibt seine UID zurück
      */
     async loginSpieler(spielerName, passwort) {
+        // Spielername überarbeiten
         const saubererName = spielerName.trim().replace(/[^a-zA-Z0-9 äöüÄÖÜß\-_]/g, "");
         const emailName = saubererName
             .toLowerCase()
             .replace(/ä/gi, "ae").replace(/ö/gi, "oe").replace(/ü/gi, "ue").replace(/ß/gi, "ss")
 
+        // Email Adresse erstellen
         const fakeEmail = this._baueFakeEmail(emailName);
+
+        // Spieler an Datenbank anmelden
         const userCredential = await signInWithEmailAndPassword(this.auth, fakeEmail, passwort);
+
+        // Login Zeitstempel in Datenbank schreiben
         await this.updateDocument("spieler", userCredential.user.uid, { lastLogin: Date.now() });
+
+        // UID zurückgeben
         return userCredential.user.uid;
     }
 
@@ -86,9 +97,11 @@ export class FirebaseService {
      * Holt den aktuellen Spielstatus von der Datenbank
      */
     async getSpielStatus() {
+        // Spielstatus aus Datenbank laden
         const docRef = doc(this.db, "spielStatus", "global");
         const docSnap = await getDoc(docRef);
         
+        // Daten zurückgeben
         if (docSnap.exists()) return docSnap.data();
         return null;
     }
@@ -100,9 +113,11 @@ export class FirebaseService {
      * @returns {Object|null} Die Daten des Spielers oder null, wenn er nicht existiert
      */
     async getSpielerInfo(uid) {
+        // Spieler Info aus Datenbank laden
         const docRef = doc(this.db, "spieler", uid);
         const docSnap = await getDoc(docRef);
         
+        // Daten zurückgeben
         if (docSnap.exists()) return docSnap.data();
         return null;
     }
@@ -115,9 +130,11 @@ export class FirebaseService {
      * @returns {Object|null} Die Daten des Dokuments oder null, wenn es nicht existiert
      */
     async getDocument(collectionName, docId) {
+        // Dokument aus Datenbank laden
         const docRef = doc(this.db, collectionName, docId);
         const docSnap = await getDoc(docRef);
         
+        // Daten zurückgeben
         if (docSnap.exists()) return docSnap.data();
         return null;
     }
@@ -129,6 +146,7 @@ export class FirebaseService {
      * @param {Object} data - Die zu aktualisierenden Felder (z.B. { station: 2 })
      */
     async updateDocument(collectionName, docId, data) {
+        // Dokument in Datenbank aktualisieren
         const docRef = doc(this.db, collectionName, docId);
         await updateDoc(docRef, data);
     }
@@ -139,9 +157,11 @@ export class FirebaseService {
      * @returns {Array} Ein Array aus Objekten, die die ID und die Daten enthalten
      */
     async getAllDocuments(collectionName) {
+        // Ganze Sammlung aus Datenbank laden
         const querySnapshot = await getDocs(collection(this.db, collectionName));
-        const dokumente = [];
         
+        // Daten in Array schieben
+        const dokumente = [];
         querySnapshot.forEach((doc) => {
             dokumente.push({
                 id: doc.id,
@@ -149,6 +169,7 @@ export class FirebaseService {
             });
         });
         
+        // Daten zurückgeben
         return dokumente;
     }
 
@@ -158,6 +179,7 @@ export class FirebaseService {
      * @param {string} docId - ID des zu löschenden Dokuments (z.B. Spielername)
      */
     async deleteDocument(collectionName, docId) {
+        // Dokument aus Datenbank löschen
         const docRef = doc(this.db, collectionName, docId);
         await deleteDoc(docRef);
     }
@@ -169,6 +191,7 @@ export class FirebaseService {
      * @param {string} daten - Daten für das neue Dokument
      */
     async createDocument(collectionName, docId, daten) {
+        // Dokument in Datenbank anlegen
         const docRef = doc(this.db, collectionName, docId);
         await setDoc(docRef, daten);
     }
@@ -178,15 +201,19 @@ export class FirebaseService {
      * @returns {Promise<boolean>} true wenn freigegeben, false wenn pausiert
      */
     async istSpielFreigegeben() {
+        // Status der Spielfreigabe aus Datenbank abrufen
         const daten = await this.getDocument("spielStatus", "global");
+
+        // Daten zurückgeben
         return daten ? daten.freigegeben : false; // Standardmäßig false, falls Dokument fehlt
     }
 
     /**
-     * Schaltet den globalen Spielstatus um (Nur für Admin)
+     * Schaltet den globalen Spielstatus um
      * @param {boolean} status - true für freigeben, false für pausieren
      */
     async setzeSpielStatus(status) {
+        // Spielfreigabe in Datenbank schreiben
         await this.updateDocument("spielStatus", "global", { freigegeben: status });
     }
 
@@ -195,15 +222,19 @@ export class FirebaseService {
      * @returns {Promise<boolean>} true wenn freigegeben, false wenn deaktiviert
      */
     async istTippFreigegeben() {
+        // Holt Freigabestatus in Datenbank ab
         const daten = await this.getDocument("spielStatus", "global");
+
+        // Daten zurückgeben
         return daten ? daten.tipps : false; // Standardmäßig false, falls Dokument fehlt
     }
 
     /**
-     * Schaltet den Tipp Spielstatus um (Nur für Admin)
+     * Schaltet den Tipp Spielstatus um
      * @param {boolean} status - true für freigeben, false für deaktiviert
      */
     async setzeTippStatus(status) {
+        // Tippfreigabe in Datenbank schreiben
         await this.updateDocument("spielStatus", "global", { tipps: status });
     }
 
@@ -212,6 +243,7 @@ export class FirebaseService {
      * @param {string} msg - Text der Nachricht
      */
     async setzeAdminNachricht(msg) {
+        // Schreibt Daten in die Datenbank
         await this.updateDocument("spielStatus", "global", { adminNachricht: msg });
     }
 
@@ -220,7 +252,10 @@ export class FirebaseService {
      * @returns {string} Text der Nachricht
      */
     async getAdminNachricht() {
+        // Daten aus der Datenbank laden
         const daten = await this.getDocument("spielStatus", "global");
+
+        // Daten zurückgeben
         return daten ? daten.adminNachricht : "";
     }
 
@@ -229,6 +264,7 @@ export class FirebaseService {
      * @param {string} msg - Text der Nachricht
      */
     async setzeAdminNews(msg) {
+        // Schreibt Daten in die Datenbank
         await this.updateDocument("spielStatus", "global", { news: msg });
     }
 
@@ -237,7 +273,10 @@ export class FirebaseService {
      * @returns {string} Text der Nachricht
      */
     async getAdminNews() {
+        // Daten aus der Datenbank laden
         const daten = await this.getDocument("spielStatus", "global");
+
+        // Daten zurückgeben
         return daten ? daten.news : "";
     }
 }
