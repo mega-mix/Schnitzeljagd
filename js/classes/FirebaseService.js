@@ -3,7 +3,7 @@ import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, setDoc, dele
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 
-export const APP_VERSION ="v1.6.1";
+export const APP_VERSION ="v1.7.0";
 
 export class FirebaseService {
     constructor() {

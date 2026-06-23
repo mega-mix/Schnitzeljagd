@@ -1,5 +1,3 @@
-- Admin soll neue Episoden freigeben können
-- Spieler sollen neue episoden laden
-- Benachrichtigung bei neuer Episode
-- Episoden Titel hinzufügen
+- Admin soll neue Episoden für einzelne Spieler freigeben können
 - Team modus umschalten, um Teams unterschiedliche Episoden zuzuteilen
+- Tipps auf 3 erweitern

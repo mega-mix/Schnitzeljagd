@@ -114,7 +114,7 @@ async function zeigeStation() {
                     spielTippBtn.disabled = true;
 
                     // Tipp anzeigen
-                    spielTipp.innerText = alleStationen[spielerInfo.episoden[keyEpisode].station].tipp1 || "Kein Tipp verfügbar.";
+                    spielTipp.innerText = alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
                     break;
             }
         } else {
@@ -134,7 +134,7 @@ async function zeigeStation() {
             `;
             document.getElementById("spiel-tipp-container").style.display = "none";
         }
-        else if (spielerEpisode.station <= alleStationen.length) {
+        else if (spielerEpisode.station < alleStationen.length) {
             // Spiel freigegeben, und fortschritt noch nicht am Ende
 
             // Tipp anzeigen
@@ -146,8 +146,8 @@ async function zeigeStation() {
 
             // GUI zur Station generieren
             container.innerHTML = `
-                <p>Station ${spielerEpisode.station }</p>
-                <p>${alleStationen[spielerEpisode.station].frage}</p>
+                <p>Station ${spielerEpisode.station}</p>
+                <p>${alleStationen[spielerEpisode.station-1].frage}</p>
                 <textarea id="antwort-input" placeholder="Deine Antwort"></textarea>
                 <button id="antwort-btn">Antwort prüfen</button>
                 <p id="spiel-feedback" style="color:red;"></p>
@@ -178,7 +178,7 @@ async function pruefeAntwort() {
 
     // Antwort mit Lösung vergleichen
     if (spielerInfo.episoden[keyEpisode].station <= alleStationen.length) {
-        const korrekteAntwort = alleStationen[spielerInfo.episoden[keyEpisode].station].antwort.toLowerCase().trim();
+        const korrekteAntwort = alleStationen[spielerInfo.episoden[keyEpisode].station-1].antwort.toLowerCase().trim();
         istRichtig = bereinigteSpielerAntwort === korrekteAntwort;
     }
 
@@ -330,7 +330,7 @@ document.getElementById("spiel-tipp-btn").addEventListener("click", async () => 
     spielerInfo.episoden[keyEpisode].tipps.push(tippObj);
 
     // Tipp anzeigen
-    spielTipp.innerText = alleStationen[spielerInfo.episoden[keyEpisode].station].tipp1 || "Kein Tipp verfügbar.";
+    spielTipp.innerText = alleStationen[spielerInfo.episoden[keyEpisode].station-1].tipp1 || "Kein Tipp verfügbar.";
 
     // Zeitstempel generieren
     spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();

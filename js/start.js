@@ -8,6 +8,7 @@ document.getElementById("version").innerText = APP_VERSION;
 let spielStatus = {};
 let spielerInfo = {};
 let spielerUid = "";
+let alleStationen = [];
 
 
 
@@ -81,7 +82,7 @@ fb.onAuthChanged(async (user) => {
 
                     const opt = document.createElement("option");
                     opt.value = key; 
-                    opt.textContent = "Episode " + key;
+                    opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;
                     dropdownEpisoden.appendChild(opt);
                 });
                 dropdownEpisoden.value = spielerInfo.aktiveEpisode;
@@ -103,20 +104,56 @@ fb.onAuthChanged(async (user) => {
 
 
 // *---------------------------------------------------------------------------------------------------------------------------------------
-// *-------------------- SPIEL BUTTON --------------------
+// *-------------------- START BEREICH --------------------
 // *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("start-spiel-btn").addEventListener("click", () => {
     // Weiterleiten auf Spiel Seite
     window.location.href = "game.html";
 });
 
+document.getElementById("start-admin-btn").addEventListener("click", () => {
+    // Weiterleiten auf Admin Seite
+    window.location.href = "admin.html";
+});
 
+document.getElementById("start-fortschritt-btn").addEventListener("click", async () => {
+    // Dropdown Episoden füllen
+    const dropdownEpisoden = document.getElementById("fortschritt-episoden");
+    dropdownEpisoden.innerHTML = "";
+    Object.entries(spielStatus.episodenKatalog).forEach(([key]) => {
+        // Freigabe Check
+        if (!spielStatus.episodenKatalog[key].globalAktiv) return;
+        if (spielerInfo.episoden[key] === undefined) {
+            // Neue Episode Knopf anzeigen
+            neueEpisodeBtn.style.display = "block";
+            return;
+        }
+        if (!spielerInfo.episoden[key].aktiv) return;
 
+        const opt = document.createElement("option");
+        opt.value = key; 
+        opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;
+        dropdownEpisoden.appendChild(opt);
+    });
+    dropdownEpisoden.value = spielerInfo.aktiveEpisode;
 
+    // Stationen von Datenbank abrufen
+    try {
+        const episodenPath = "episode" + dropdownEpisoden.value;
+        alleStationen = await fb.getAllDocuments(episodenPath);
+    } catch (error) {
+        console.log("Fehler beim Laden der Stationen: ", error);
+    }
 
-// *---------------------------------------------------------------------------------------------------------------------------------------
-// *-------------------- NEUE EPISODE BEREICH --------------------
-// *---------------------------------------------------------------------------------------------------------------------------------------
+    // Fortschritt anzeigen
+    const anzeigeText = "Fortschritt: " + spielerInfo.episoden[dropdownEpisoden.value].station + " / " + alleStationen.length;
+    document.getElementById("fortschritt-fortschritt").innerText = anzeigeText;
+
+    // Bereiche umschalten
+    document.getElementById("start-bereich").style.display = "none";
+    document.getElementById("fortschritt-bereich").style.display = "block";
+});
+
 document.getElementById("start-neue-episode-btn").addEventListener("click", () => {
     // Dropdown Episoden füllen
     const dropdownEpisoden = document.getElementById("neue-episoden-laden");
@@ -127,17 +164,86 @@ document.getElementById("start-neue-episode-btn").addEventListener("click", () =
         if (spielerInfo.episoden[key] === undefined) {
             const opt = document.createElement("option");
             opt.value = key; 
-            opt.textContent = "Episode " + key;
+            opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;;
             dropdownEpisoden.appendChild(opt);
         }
     });
-    dropdownEpisoden.value = "";
+    dropdownEpisoden.selectedIndex = 0;
 
     // Bereiche umschalten
     document.getElementById("start-bereich").style.display = "none";
     document.getElementById("neue-episode-bereich").style.display = "block";
 });
 
+
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- FORTSCHRITT BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
+document.getElementById("fortschritt-abort-btn").addEventListener("click", () => {
+    // Bereiche umschalten
+    document.getElementById("fortschritt-bereich").style.display = "none";
+    document.getElementById("start-bereich").style.display = "block";
+});
+
+document.getElementById("fortschritt-reset-btn").addEventListener("click", async () => {
+    const keyEpisode = document.getElementById("fortschritt-episoden").value;
+    const resetBtn = document.getElementById("fortschritt-reset-btn");
+
+    // Popup zur Bestätigung
+    const entscheidung = confirm(`Möchtest du deinen Fortschritt in Episode ${keyEpisode} wirklich zurücksetzen?`);
+    if (!entscheidung) return;
+
+    // Reset Knopf sperren
+    resetBtn.disabled = true;
+    resetBtn.innerText = "Bitte warten...";
+
+    // Fortschritt in Spielerdaten setzen
+    spielerInfo.episoden[keyEpisode].station = 1;
+    spielerInfo.episoden[keyEpisode].tipps = [];
+    spielerInfo.episoden[keyEpisode].zeitstempel = Date.now();
+
+    // Fortschritt anzeigen
+    const anzeigeText = "Fortschritt: " + spielerInfo.episoden[keyEpisode].station + " / " + alleStationen.length;
+    document.getElementById("fortschritt-fortschritt").innerText = anzeigeText;
+
+    // Spielerdaten in Datenbank schreiben
+    try {
+        await fb.updateDocument("spieler", spielerUid, {
+            [`episoden.${keyEpisode}`]: spielerInfo.episoden[keyEpisode]
+        });
+    } catch (error) {
+        console.log("Fehler beim Rücksetzen des Fortschritts: ", error);
+    } finally {
+        // Reset Knopf freigeben
+        resetBtn.disabled = false;
+        resetBtn.innerText = "Reset";
+    }
+});
+
+document.getElementById("fortschritt-episoden").addEventListener("change", async (obj) => {
+    // Stationen von Datenbank abrufen
+    try {
+        const episodenPath = "episode" + obj.target.value;
+        alleStationen = await fb.getAllDocuments(episodenPath);
+    } catch (error) {
+        console.log("Fehler beim Laden der Stationen: ", error);
+    }
+
+    // Fortschritt anzeigen
+    const anzeigeText = "Fortschritt: " + spielerInfo.episoden[obj.target.value].station + " / " + alleStationen.length;
+    document.getElementById("fortschritt-fortschritt").innerText = anzeigeText;
+});
+
+
+
+
+
+// *---------------------------------------------------------------------------------------------------------------------------------------
+// *-------------------- NEUE EPISODE BEREICH --------------------
+// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("neue-episode-laden-btn").addEventListener("click", async () => {
     // Episode zur Datenbank hinzufügen
     try {
@@ -167,7 +273,7 @@ document.getElementById("neue-episode-laden-btn").addEventListener("click", asyn
 
             const opt = document.createElement("option");
             opt.value = key; 
-            opt.textContent = "Episode " + key;
+            opt.textContent = "Episode " + key + " - " + spielStatus.episodenKatalog[key].titel;;
             dropdownEpisoden.appendChild(opt);
         });
 
@@ -185,25 +291,6 @@ document.getElementById("neue-episode-abort-btn").addEventListener("click", () =
     document.getElementById("start-bereich").style.display = "block";
 });
 
-
-
-
-
-// *---------------------------------------------------------------------------------------------------------------------------------------
-// *-------------------- ADMIN BUTTON --------------------
-// *---------------------------------------------------------------------------------------------------------------------------------------
-document.getElementById("start-admin-btn").addEventListener("click", () => {
-    // Weiterleiten auf Admin Seite
-    window.location.href = "admin.html";
-});
-
-
-
-
-
-// *---------------------------------------------------------------------------------------------------------------------------------------
-// *-------------------- EPISODEN DROPDOWN --------------------
-// *---------------------------------------------------------------------------------------------------------------------------------------
 document.getElementById("start-episoden").addEventListener("change", async (event) => {
     const auswahlEpisode = parseFloat(event.target.value);
 
